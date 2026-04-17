@@ -12,6 +12,8 @@ html,body{background:#060608;overflow-x:hidden;}
 @keyframes glow{0%,100%{box-shadow:0 0 8px #00ff8740}50%{box-shadow:0 0 22px #00ff8780}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+@keyframes revengePulse{0%,100%{box-shadow:0 0 0 0 #ff6b6b00}50%{box-shadow:0 0 40px 8px #ff6b6b55}}
+@keyframes revengeFlash{0%,100%{border-color:#ff6b6b40}50%{border-color:#ff6b6bcc}}
 .row:active{background:#111120!important;}
 .btn:active{transform:scale(.96);opacity:.85;}
 `;
@@ -197,6 +199,141 @@ const NEWS_DB = [
   {id:36, symbol:"SPY",  sent:"negative", pct:"-1.4%", headline:"חששות ממיתון גוברים — תשואות אג\"ח 2-שנה חוצות 5.1%", summary:"ההיפוך בעקום התשואות מעמיק, עם מדד ISM מתחת ל-48 בחודש השלישי ברציפות.", source:"Bloomberg", mins:45},
   {id:37, symbol:"QQQ",  sent:"positive", pct:"+1.2%", headline:"Nasdaq מוביל עליות — עונת דיווחים חזקה, AI stocks בחזית", summary:"37 מתוך 50 חברות שדיווחו הכו תחזיות. מגזר ה-AI וחצי-מוליכים מוביל.", source:"CNBC", mins:90},
 ];
+
+// ── GLOSSARY DATA ─────────────────────────────────────────────────────
+const GLOSSARY = [
+  {
+    term:"RSI",
+    full:"Relative Strength Index",
+    cat:"אינדיקטור",
+    color:"#ffd93d",
+    short:"מד תנופה 0–100 שמזהה קנייה-יתר או מכירת-יתר",
+    body:"RSI מחשב את יחס עליות לירידות ב-14 מחזורים אחרונים. מעל 70 — המניה נחשבת קנויה-יתר (אות מכירה). מתחת ל-30 — מכורה-יתר (אות קנייה). הסוחר משתמש בו כדי לתזמן כניסות ויציאות.",
+    examples:["RSI מעל 70 → שקול מכירה","RSI מתחת ל-30 → הזדמנות קנייה","RSI 50 → ניטרלי, ממתין לכיוון"],
+  },
+  {
+    term:"MACD",
+    full:"Moving Average Convergence Divergence",
+    cat:"אינדיקטור",
+    color:"#ffd93d",
+    short:"מד תנופה שמזהה שינוי מגמה באמצעות שני ממוצעים נעים",
+    body:"MACD = EMA12 פחות EMA26. כשה-MACD חוצה את קו ה-Signal כלפי מעלה — סיגנל קנייה. חיתוך כלפי מטה — סיגנל מכירה. ההיסטוגרמה מציגה את עוצמת המגמה.",
+    examples:["MACD חוצה Signal למעלה → קנייה","היסטוגרמה גדלה → מגמה מתחזקת","MACD שלילי + Signal שלילי → מגמת ירידה"],
+  },
+  {
+    term:"EMA",
+    full:"Exponential Moving Average",
+    cat:"ממוצע נע",
+    color:"#38bdf8",
+    short:"ממוצע נע שנותן משקל גבוה יותר למחירים האחרונים",
+    body:"בניגוד ל-SMA (ממוצע פשוט), ה-EMA מגיב מהר יותר לשינויי מחיר. EMA20 משמש לסחר קצר-טווח, EMA50 למגמה בינונית, EMA200 למגמה ארוכה. מחיר מעל EMA — מגמה עולה.",
+    examples:["מחיר מעל EMA20 → מגמה עולה קצרת-טווח","EMA20 חוצה EMA50 למעלה → 'Golden Cross'","מחיר נוגע ב-EMA ומקפץ → רמת תמיכה"],
+  },
+  {
+    term:"Stop Loss",
+    full:"Stop Loss Order",
+    cat:"ניהול סיכון",
+    color:"#ff6b6b",
+    short:"הוראת מכירה אוטומטית שמגבילה את ההפסד המקסימלי",
+    body:"Stop Loss הוא מחיר שנקבע מראש שבו העסקה נסגרת אוטומטית להגנה על ההון. כלל אצבע: Stop Loss ב-1–3% מתחת למחיר הכניסה. לעולם לא להזיז אותו נגד המגמה.",
+    examples:["קנייה ב-$100 → Stop Loss ב-$97 (3%)","Stop Loss צמוד לתמיכה טכנית","Stop Trailing — Stop שזז עם הרווח"],
+  },
+  {
+    term:"Position Sizing",
+    full:"Position Sizing",
+    cat:"ניהול סיכון",
+    color:"#ff6b6b",
+    short:"חישוב מספר המניות לקנות לפי גודל הסיכון המותר",
+    body:"הנוסחה: כמות = (תיק × % סיכון) ÷ (מחיר כניסה − Stop Loss). לדוגמה: תיק $50,000, סיכון 1%, Stop Loss $5 → קנה 100 מניות. Position Sizing מגן מפני הפסד קטסטרופלי.",
+    examples:["תיק $50K, סיכון 1% = $500 מקסימום הפסד","מרחק Stop גדול → כמות קטנה יותר","לעולם לא להכפיל פוזיציה מפסידה"],
+  },
+  {
+    term:"R:R",
+    full:"Risk to Reward Ratio",
+    cat:"ניהול סיכון",
+    color:"#ff6b6b",
+    short:"יחס בין הסיכון לרווח הפוטנציאלי בעסקה",
+    body:"R:R = (יעד − כניסה) ÷ (כניסה − Stop). R:R של 2:1 אומר שעל כל $1 סיכון — $2 תשואה. סוחרים מקצועיים לא פותחים עסקה עם R:R מתחת ל-2:1. R:R 3:1 נחשב מצוין.",
+    examples:["כניסה $100, Stop $97, יעד $106 → R:R 2:1","R:R מתחת ל-2:1 → דלג על העסקה","R:R גבוה מפצה על אחוז הצלחה נמוך"],
+  },
+  {
+    term:"Support",
+    full:"Support Level",
+    cat:"ניתוח טכני",
+    color:"#00ff87",
+    short:"רמת מחיר שבה הביקוש חזק מספיק לעצור ירידה",
+    body:"רמת תמיכה היא 'תקרה של הרצפה' — מחיר שבו בעבר נרשמו הרבה קניות. כשהמחיר מגיע לתמיכה ומקפץ — סיגנל קנייה. אם פורץ מתחת — התמיכה הפכה להתנגדות.",
+    examples:["מחיר ניגש לתמיכה 3 פעמים → חזקה","פריצה מתחת תמיכה → אות מכירה","תמיכה = Stop Loss טבעי"],
+  },
+  {
+    term:"Resistance",
+    full:"Resistance Level",
+    cat:"ניתוח טכני",
+    color:"#00ff87",
+    short:"רמת מחיר שבה ההיצע חזק מספיק לעצור עלייה",
+    body:"התנגדות היא 'תקרה' שבה בעבר נרשמו הרבה מכירות. כשהמחיר פורץ מעל התנגדות בנפח גבוה — סיגנל קנייה חזק. יעד הרווח נקבע לרוב ליד רמת התנגדות הבאה.",
+    examples:["פריצת התנגדות בנפח גבוה → קנייה חזקה","התנגדות = יעד הרווח הטבעי","התנגדות שנפרצת הופכת לתמיכה"],
+  },
+  {
+    term:"Volume",
+    full:"Trading Volume",
+    cat:"ניתוח טכני",
+    color:"#38bdf8",
+    short:"מספר המניות שנסחרו בפרק זמן — מאשר את עוצמת המגמה",
+    body:"נפח גבוה מאשר תנועת מחיר. עלייה בנפח גבוה = קנייה מוסדית. פריצת התנגדות בנפח נמוך = לא אמינה. נפח נמוך = חוסר אמון בתנועה.",
+    examples:["פריצה + נפח גבוה פי 2 → אישור חזק","עלייה בנפח נמוך → חלש, לא לסמוך","Volume Spike → כניסה מוסדית/יציאה"],
+  },
+  {
+    term:"FOMO",
+    full:"Fear Of Missing Out",
+    cat:"פסיכולוגיה",
+    color:"#a78bfa",
+    short:"פחד להחמיץ עלייה שדוחף לקנייה אימפולסיבית בלי תכנון",
+    body:"FOMO הוא אחד ממחריבי ההון הגדולים בשוק. הסוחר נכנס לעסקה כי 'כולם מרוויחים' — לרוב בנקודה הגרועה ביותר. הסימן: אין סטאפ, אין Stop Loss, הלב רץ. הפתרון: תוכנית עסקה מראש.",
+    examples:["מניה עלתה 15% ← FOMO → כניסה בטופ","'כולם מדברים על X' → סימן אזהרה","תוכנית עסקה מראש = תרופה ל-FOMO"],
+  },
+  {
+    term:"Revenge Trading",
+    full:"Revenge Trading",
+    cat:"פסיכולוגיה",
+    color:"#a78bfa",
+    short:"כניסה אימפולסיבית לעסקה אחרי הפסד כדי 'להחזיר' את הכסף",
+    body:"Revenge Trading הוא ניסיון רגשי לפצות על הפסד בעסקה מיידית. לרוב מסתיים בהפסד כפול. הסימנים: עסקה תוך 10 דקות מהפסד, גודל פוזיציה גדול מהרגיל, אין תכנון.",
+    examples:["הפסד → עסקה מיידית → הפסד כפול","Stop לאחר הפסד: 20 דקות הפסקה","Circuit Breaker מגן מפני Revenge Trading"],
+  },
+  {
+    term:"Circuit Breaker",
+    full:"Circuit Breaker",
+    cat:"ניהול סיכון",
+    color:"#ff6b6b",
+    short:"מנגנון שנועל את המסחר כשמגיעים להפסד יומי מקסימלי",
+    body:"Circuit Breaker הוא כלל ברזל: כשההפסד היומי מגיע ל-X% מהתיק — מפסיקים למסחר לאותו יום. מטרתו למנוע ספירלת הפסדים. ברוקרים מקצועיים מגדירים Circuit Breaker של 2–3% יומי.",
+    examples:["Circuit Breaker ב-2% → עצור היום","לאחר Circuit Breaker: בדוק מה קרה","Circuit Breaker = הגנה על ההון שלך"],
+  },
+  {
+    term:"Earnings",
+    full:"Earnings Report",
+    cat:"פונדמנטלי",
+    color:"#fb923c",
+    short:"דוח רבעוני שמפרסמת חברה עם הכנסות ורווחים",
+    body:"חברות מפרסמות דוח כספי כל רבעון (3 חודשים). הדוח כולל: הכנסות, רווח נקי, תחזית לרבעון הבא. 'Beat' = עקף תחזיות → עלייה. 'Miss' = פספס → ירידה. לעיתים ההפך — 'Buy the rumor, sell the news'.",
+    examples:["EPS Beat → מניה עולה 5–10%","Revenue Miss → ירידה חדה","'Sell the news' לאחר עלייה לפני דיווח"],
+  },
+  {
+    term:"Short Squeeze",
+    full:"Short Squeeze",
+    cat:"תופעות שוק",
+    color:"#e879f9",
+    short:"עלייה מהירה וחדה שנגרמת ממוכרים בחסר שנאלצים לקנות",
+    body:"Short Squeeze קורה כש: (1) הרבה סוחרים מכרו בחסר מניה (שרטו), (2) המחיר עולה — הם מפסידים, (3) הם חייבים לקנות בחזרה כדי לסגור הפסד → זה גורם לעלייה נוספת. GameStop 2021 הוא הדוגמה הקלאסית.",
+    examples:["Short Interest מעל 20% → Short Squeeze אפשרי","GME 2021: עלייה של 2,000% ב-2 שבועות","Short Squeeze = הזדמנות, לא להיתפס בצד השני"],
+  },
+];
+
+const CAT_COLOR={
+  "אינדיקטור":"#ffd93d","ממוצע נע":"#38bdf8","ניהול סיכון":"#ff6b6b",
+  "ניתוח טכני":"#00ff87","פסיכולוגיה":"#a78bfa","פונדמנטלי":"#fb923c","תופעות שוק":"#e879f9",
+};
 
 const SENT_META={
   positive:{label:"חיובי",  color:"#00ff87", bg:"#00ff8718", border:"#00ff8745", icon:"📈"},
@@ -717,13 +854,35 @@ function OpenPositions({profile,onClose}){
 // ══════════════════════════════════════════════════════════════════════
 // SCANNER (compact)
 // ══════════════════════════════════════════════════════════════════════
-function Scanner(){
+// Beginner tooltips for key terms
+const BEGINNER_TIPS={
+  RSI:"RSI מעל 70 = קנוי יתר (אות מכירה). מתחת ל-30 = מכור יתר (אות קנייה).",
+  שינוי:"שינוי האחוז של המניה ביום המסחר הנוכחי.",
+  ציון:"ציון כולל מ-0 עד 100 — מחשב טכני + פונדמנטלי + סנטימנט.",
+  "R:R":"יחס תגמול/סיכון. R:R של 2 = על כל $1 סיכון יש פוטנציאל של $2 רווח.",
+  טכני:"ניתוח גרפים ואינדיקטורים (RSI, EMA, MACD).",
+  פונדמנטלי:"ניתוח נתוני החברה: הכנסות, רווחים, צמיחה.",
+  סנטימנט:"מה השוק 'מרגיש' — חדשות, ציוצים, סנטימנט ציבורי.",
+};
+
+function BeginnerTip({text}){
+  return(
+    <div style={{background:"#ffd93d10",border:"1px solid #ffd93d25",borderRadius:8,padding:"6px 10px",fontSize:11,color:"#ffd93d",marginBottom:8,display:"flex",gap:6,alignItems:"flex-start"}}>
+      <span style={{flexShrink:0}}>💡</span><span>{text}</span>
+    </div>
+  );
+}
+
+function Scanner({experience="intermediate"}){
   const [sel,setSel]=useState(null);
   const [filter,setFilter]=useState("הכל");
   const [sort,setSort]=useState("score");
+  const isBegin=experience==="beginner";
+  const isPro=experience==="professional";
   const filtered=ALL_STOCKS.filter(s=>filter==="הכל"||s.sig===filter).sort((a,b)=>sort==="score"?b.total-a.total:sort==="change"?b.change-a.change:a.rsi-b.rsi);
   return(
     <>
+      {isBegin&&<div style={{padding:"8px 20px 0"}}><BeginnerTip text="לחץ על מניה לפרטים. ה'ציון' מסכם את כל הניתוחים — מעל 70 זו הזדמנות קנייה פוטנציאלית."/></div>}
       <div style={{padding:"10px 20px 0",overflowX:"auto",display:"flex",gap:8,paddingBottom:4,flexShrink:0}}>
         {["הכל","קנייה חזקה","קנייה","המתנה","מכירה"].map(f=>(
           <button key={f} className="btn" onClick={()=>setFilter(f)} style={{background:filter===f?"#00ff8720":"#0d0d18",border:`1px solid ${filter===f?"#00ff8760":"#1a1a2e"}`,borderRadius:20,color:filter===f?"#00ff87":"#555",padding:"6px 14px",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif"}}>{f}</button>
@@ -762,14 +921,26 @@ function Scanner(){
           </div>
           <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
             <Section><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:"#fff",fontSize:32,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>${sel.price}</div><div style={{color:sel.change>=0?"#00ff87":"#ff6b6b",fontSize:16,fontWeight:600}}>{sel.change>=0?"+":""}{sel.change}%</div></div><Spark data={sel.spark} color={sel.change>=0?"#00ff87":"#ff6b6b"} w={100} h={44}/></div></Section>
+            {isBegin&&<BeginnerTip text={`RSI ${sel.rsi} — ${sel.rsi<30?"מכור יתר, הזדמנות קנייה פוטנציאלית":sel.rsi>70?"קנוי יתר, זהירות":sel.rsi>50?"מגמה עולה, המתן לאישור":"מגמה יורדת, זהירות"}. יעד: $${sel.target} | סטופ: $${sel.stop}`}/>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               {[{l:"יעד",v:`$${sel.target}`,c:"#00ff87"},{l:"סטופ",v:`$${sel.stop}`,c:"#ff6b6b"},{l:"R:R",v:`${sel.rr}:1`,c:sel.rr>=2?"#00ff87":"#ffd93d"},{l:"RSI",v:sel.rsi,c:sel.rsi<30?"#00ff87":sel.rsi>70?"#ff6b6b":"#ffd93d"}].map(({l,v,c})=>(
-                <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#444",fontSize:11,marginBottom:4}}>{l}</div><div style={{color:c,fontSize:18,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div></div>
+                <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}>
+                  <div style={{color:"#444",fontSize:11,marginBottom:4}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div>
+                  <div style={{color:c,fontSize:18,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div>
+                  {isBegin&&l==="R:R"&&<div style={{color:"#333",fontSize:10,marginTop:3}}>יחס תגמול/סיכון</div>}
+                </div>
               ))}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-              {[{l:"טכני",v:sel.tech},{l:"פונדמנטלי",v:sel.fund},{l:"סנטימנט",v:sel.sent}].map(({l,v})=>{const c=v>=65?"#00ff87":v>=45?"#ffd93d":"#ff6b6b";return(<div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#444",fontSize:11,marginBottom:6}}>{l}</div><div style={{color:c,fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",marginBottom:6}}>{v}</div><div style={{height:3,background:"#1a1a2e",borderRadius:2}}><div style={{width:`${v}%`,height:"100%",background:c,borderRadius:2}}/></div></div>);})}
+              {[{l:"טכני",v:sel.tech},{l:"פונדמנטלי",v:sel.fund},{l:"סנטימנט",v:sel.sent}].map(({l,v})=>{const c=v>=65?"#00ff87":v>=45?"#ffd93d":"#ff6b6b";return(<div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#444",fontSize:11,marginBottom:6}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div><div style={{color:c,fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",marginBottom:6}}>{v}</div><div style={{height:3,background:"#1a1a2e",borderRadius:2}}><div style={{width:`${v}%`,height:"100%",background:c,borderRadius:2}}/></div></div>);})}
             </div>
+            {isPro&&(
+              <div style={{marginTop:10,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                {[{l:"MACD",v:sel.macd,c:sel.macd>=0?"#00ff87":"#ff6b6b"},{l:"EMA20",v:`$${sel.ema20}`,c:sel.price>sel.ema20?"#00ff87":"#ff6b6b"},{l:"EMA50",v:`$${sel.ema50}`,c:sel.price>sel.ema50?"#00ff87":"#ff6b6b"}].map(({l,v,c})=>(
+                  <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#444",fontSize:11,marginBottom:4}}>{l}</div><div style={{color:c,fontSize:14,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div></div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -817,6 +988,96 @@ function AICoach({profile,onClose}){
       </div>
     </div>
   </Screen>;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// GLOSSARY
+// ══════════════════════════════════════════════════════════════════════
+function GlossaryScreen({onClose}){
+  const [search,setSearch]=useState("");
+  const [open,setOpen]=useState(null);
+  const [catFilter,setCatFilter]=useState("הכל");
+
+  const cats=["הכל",...Array.from(new Set(GLOSSARY.map(g=>g.cat)))];
+  const filtered=GLOSSARY
+    .filter(g=>catFilter==="הכל"||g.cat===catFilter)
+    .filter(g=>!search||g.term.toLowerCase().includes(search.toLowerCase())||g.short.includes(search)||g.full.toLowerCase().includes(search.toLowerCase()));
+
+  return(
+    <Screen title="📖 מילון מושגים" onBack={onClose} accent="#a78bfa">
+
+      {/* search */}
+      <div style={{position:"relative",marginBottom:12}}>
+        <input
+          value={search} onChange={e=>{setSearch(e.target.value);setOpen(null);}}
+          placeholder="חפש מושג..."
+          style={{width:"100%",background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,color:"#fff",fontSize:14,padding:"11px 14px 11px 38px",fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl"}}
+        />
+        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#444",fontSize:15,pointerEvents:"none"}}>🔍</span>
+      </div>
+
+      {/* category pills */}
+      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4,marginBottom:14}}>
+        {cats.map(c=>{
+          const cc=CAT_COLOR[c]||"#a78bfa";
+          const active=catFilter===c;
+          return(
+            <button key={c} className="btn" onClick={()=>{setCatFilter(c);setOpen(null);}} style={{background:active?cc+"22":"#0d0d18",border:`1px solid ${active?cc+"55":"#1a1a2e"}`,borderRadius:20,color:active?cc:"#555",padding:"4px 13px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400}}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+
+      {filtered.length===0&&(
+        <div style={{textAlign:"center",padding:"48px 0",color:"#444",fontSize:14}}>לא נמצא מושג</div>
+      )}
+
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {filtered.map((g,i)=>{
+          const cc=CAT_COLOR[g.cat]||"#a78bfa";
+          const isOpen=open===g.term;
+          return(
+            <div key={g.term} onClick={()=>setOpen(isOpen?null:g.term)}
+              style={{background:"#0d0d18",border:`1px solid ${isOpen?cc+"50":"#1a1a2e"}`,borderRight:`3px solid ${cc}`,borderRadius:14,padding:"14px 16px",cursor:"pointer",animation:`fadeUp .22s ease ${i*.03}s both`,transition:"border-color .15s"}}>
+
+              {/* header row */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:isOpen?10:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{color:"#fff",fontWeight:800,fontSize:17,fontFamily:"'IBM Plex Mono',monospace"}}>{g.term}</span>
+                  <span style={{background:cc+"22",color:cc,fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${cc+"44"}`,flexShrink:0}}>{g.cat}</span>
+                </div>
+                <span style={{color:"#333",fontSize:13,flexShrink:0}}>{isOpen?"▲":"▼"}</span>
+              </div>
+
+              {/* short description always visible */}
+              <div style={{color:"#888",fontSize:12,marginTop:isOpen?0:6,lineHeight:1.5}}>{g.short}</div>
+
+              {/* expanded */}
+              {isOpen&&(
+                <div style={{animation:"fadeUp .2s ease"}}>
+                  {g.full&&g.full!==g.term&&(
+                    <div style={{color:"#444",fontSize:10,marginBottom:10,fontFamily:"'IBM Plex Mono',monospace"}}>{g.full}</div>
+                  )}
+                  <div style={{color:"#ccc",fontSize:13,lineHeight:1.8,marginBottom:12,borderTop:"1px solid #1a1a2e",paddingTop:10}}>{g.body}</div>
+                  {g.examples&&(
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {g.examples.map((ex,j)=>(
+                        <div key={j} style={{display:"flex",alignItems:"flex-start",gap:8,background:"#060608",borderRadius:10,padding:"8px 12px"}}>
+                          <span style={{color:cc,fontSize:12,flexShrink:0,marginTop:1}}>•</span>
+                          <span style={{color:"#aaa",fontSize:12,lineHeight:1.5}}>{ex}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Screen>
+  );
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1276,16 +1537,777 @@ function FearGreedMeter(){
 // ══════════════════════════════════════════════════════════════════════
 // MAIN APP
 // ══════════════════════════════════════════════════════════════════════
+// ── SECTOR HEATMAP ────────────────────────────────────────────────────
+function SectorHeatmap({onClose}){
+  const sectorMap={};
+  ALL_STOCKS.forEach(s=>{
+    if(!sectorMap[s.sector])sectorMap[s.sector]={total:0,count:0,change:0,stocks:[]};
+    sectorMap[s.sector].total+=s.total;
+    sectorMap[s.sector].change+=s.change;
+    sectorMap[s.sector].count++;
+    sectorMap[s.sector].stocks.push(s.symbol);
+  });
+  const sectors=Object.entries(sectorMap).map(([name,d])=>({
+    name,
+    avgScore:Math.round(d.total/d.count),
+    avgChange:parseFloat((d.change/d.count).toFixed(2)),
+    count:d.count,
+    stocks:d.stocks,
+  })).sort((a,b)=>b.avgChange-a.avgChange);
+
+  function cellColor(chg){
+    if(chg>=3)return{bg:"#00ff8718",border:"#00ff8760",text:"#00ff87"};
+    if(chg>=1)return{bg:"#7bff6e14",border:"#7bff6e50",text:"#7bff6e"};
+    if(chg>=-1)return{bg:"#ffd93d14",border:"#ffd93d40",text:"#ffd93d"};
+    if(chg>=-3)return{bg:"#ff6b6b14",border:"#ff6b6b50",text:"#ff6b6b"};
+    return{bg:"#cc222218",border:"#cc222260",text:"#ff4444"};
+  }
+
+  const SECTOR_ICONS={
+    "טכנולוגיה":"💻","סמיקונדקטור":"⚡","ענן":"☁️","סייבר":"🛡️",
+    "פינטק":"💳","קריפטו":"🔗","ביטקוין":"₿","ETF":"📊",
+    "רכב":"🚗","אנרגיה":"⚡","חלל":"🚀","קוונטום":"⚛️",
+    "מסחר":"🛒","שרתים":"🖥️",
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000000cc",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#0a0a12",border:"1px solid #1a1a2e",borderRadius:"20px 20px 0 0",width:"100%",maxWidth:520,maxHeight:"85vh",display:"flex",flexDirection:"column",overflowY:"auto",direction:"rtl",fontFamily:"'Heebo',sans-serif"}}>
+        <div style={{padding:"18px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #111",position:"sticky",top:0,background:"#0a0a12",zIndex:1}}>
+          <div>
+            <div style={{color:"#fff",fontSize:16,fontWeight:700}}>🗺️ מפת סקטורים</div>
+            <div style={{color:"#555",fontSize:11,marginTop:2}}>{sectors.length} סקטורים · לפי שינוי ממוצע</div>
+          </div>
+          <button className="btn" onClick={onClose} style={{background:"#1a1a2e",border:"none",borderRadius:10,color:"#666",padding:"6px 12px",cursor:"pointer",fontSize:13}}>✕</button>
+        </div>
+        <div style={{padding:"16px 20px 24px",display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+          {sectors.map(s=>{
+            const c=cellColor(s.avgChange);
+            return(
+              <div key={s.name} style={{background:c.bg,border:`1px solid ${c.border}`,borderRadius:14,padding:"14px 16px",display:"flex",flexDirection:"column",gap:6}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <span style={{fontSize:16}}>{SECTOR_ICONS[s.name]||"📈"}</span>
+                  <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:13,fontWeight:700,color:c.text}}>{s.avgChange>=0?"+":""}{s.avgChange}%</span>
+                </div>
+                <div style={{color:"#ddd",fontSize:13,fontWeight:700}}>{s.name}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{color:"#555",fontSize:11}}>{s.count} מניות</span>
+                  <span style={{color:"#444",fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>ציון {s.avgScore}</span>
+                </div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:3,marginTop:2}}>
+                  {s.stocks.slice(0,4).map(sym=>(
+                    <span key={sym} style={{background:"#ffffff0a",border:"1px solid #ffffff12",borderRadius:5,padding:"1px 5px",color:"#666",fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+                  ))}
+                  {s.stocks.length>4&&<span style={{color:"#444",fontSize:10,padding:"1px 4px"}}>+{s.stocks.length-4}</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{padding:"0 20px 16px",display:"flex",gap:8,justifyContent:"center"}}>
+          {[{chg:2,label:"עלייה חזקה"},{chg:0,label:"ניטרלי"},{chg:-2,label:"ירידה"}].map(({chg,label})=>{
+            const c=cellColor(chg);
+            return <div key={label} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:3,background:c.bg,border:`1px solid ${c.border}`}}/><span style={{color:"#555",fontSize:10}}>{label}</span></div>;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// TRADE DECISION ENGINE
+// ══════════════════════════════════════════════════════════════════════
+function calcTradeScore(s){
+  let score=s.total;
+  const fg=FEAR_GREED_VALUE;
+  // RSI
+  if(s.rsi>72)score-=22;
+  else if(s.rsi>65)score-=10;
+  else if(s.rsi<28)score+=15;
+  else if(s.rsi<35)score+=8;
+  // Fear & Greed
+  if(fg<=20)score-=18;
+  else if(fg<=35)score-=8;
+  else if(fg>=80)score-=14;
+  else if(fg>=65)score-=5;
+  // Earnings proximity
+  const e=EARNINGS_DATA.find(e=>e.symbol===s.symbol);
+  if(e){
+    const d=daysUntil(e.date);
+    if(d>=0&&d<=1)score-=28;
+    else if(d<=3)score-=18;
+    else if(d<=7)score-=10;
+  }
+  return Math.max(0,Math.min(100,Math.round(score)));
+}
+function getTradeDecision(score){
+  if(score>=65)return{icon:"✅",label:"מומלץ לסחר",eng:"GOOD TO TRADE",color:"#00ff87",bg:"#00ff8712",border:"#00ff8745"};
+  if(score>=40)return{icon:"⚠️",label:"מסוכן",eng:"RISKY",color:"#ffd93d",bg:"#ffd93d10",border:"#ffd93d40"};
+  return{icon:"❌",label:"לא לסחור",eng:"DON'T TRADE",color:"#ff6b6b",bg:"#ff6b6b10",border:"#ff6b6b40"};
+}
+function TradeDecisionEngine({onClose}){
+  const [filter,setFilter]=useState("הכל");
+  const [sortBy,setSortBy]=useState("score");
+
+  const enriched=ALL_STOCKS.map(s=>{
+    const tradeScore=calcTradeScore(s);
+    const dec=getTradeDecision(tradeScore);
+    const earning=EARNINGS_DATA.find(e=>e.symbol===s.symbol);
+    const earningDays=earning?daysUntil(earning.date):null;
+    const hasEarningsSoon=earningDays!==null&&earningDays>=0&&earningDays<=7;
+    return{...s,tradeScore,dec,earningDays,hasEarningsSoon};
+  });
+
+  const filtered=enriched
+    .filter(s=>{
+      if(filter==="מומלץ")return s.tradeScore>=65;
+      if(filter==="מסוכן")return s.tradeScore>=40&&s.tradeScore<65;
+      if(filter==="לא לסחור")return s.tradeScore<40;
+      return true;
+    })
+    .sort((a,b)=>sortBy==="score"?b.tradeScore-a.tradeScore:sortBy==="rsi"?a.rsi-b.rsi:b.total-a.total);
+
+  const good=enriched.filter(s=>s.tradeScore>=65).length;
+  const risky=enriched.filter(s=>s.tradeScore>=40&&s.tradeScore<65).length;
+  const bad=enriched.filter(s=>s.tradeScore<40).length;
+  const fg=FEAR_GREED_VALUE;
+  const fgInfo=getFearGreedInfo(fg);
+
+  return(
+    <Screen title="🎯 מנוע החלטת עסקה" onBack={onClose} accent="#00ff87">
+
+      {/* Summary bar */}
+      <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,padding:"14px 16px",marginBottom:12,direction:"rtl"}}>
+        <div style={{color:"#555",fontSize:11,fontWeight:600,marginBottom:10,letterSpacing:0.5}}>סיכום · {enriched.length} מניות בסקנר</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+          <div style={{background:"#00ff8710",border:"1px solid #00ff8730",borderRadius:12,padding:"10px",textAlign:"center"}}>
+            <div style={{color:"#00ff87",fontSize:22,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{good}</div>
+            <div style={{color:"#00ff87",fontSize:10,marginTop:2}}>✅ מומלץ</div>
+          </div>
+          <div style={{background:"#ffd93d10",border:"1px solid #ffd93d30",borderRadius:12,padding:"10px",textAlign:"center"}}>
+            <div style={{color:"#ffd93d",fontSize:22,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{risky}</div>
+            <div style={{color:"#ffd93d",fontSize:10,marginTop:2}}>⚠️ מסוכן</div>
+          </div>
+          <div style={{background:"#ff6b6b10",border:"1px solid #ff6b6b30",borderRadius:12,padding:"10px",textAlign:"center"}}>
+            <div style={{color:"#ff6b6b",fontSize:22,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{bad}</div>
+            <div style={{color:"#ff6b6b",fontSize:10,marginTop:2}}>❌ לא לסחור</div>
+          </div>
+        </div>
+        {/* Factors legend */}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <div style={{display:"flex",alignItems:"center",gap:5,background:"#060608",borderRadius:8,padding:"5px 10px"}}>
+            <span style={{fontSize:11}}>😱</span>
+            <span style={{color:"#888",fontSize:11}}>F&G:</span>
+            <span style={{color:fgInfo.color,fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{fg} {fgInfo.label}</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:5,background:"#060608",borderRadius:8,padding:"5px 10px"}}>
+            <span style={{fontSize:11}}>📊</span>
+            <span style={{color:"#888",fontSize:11}}>RSI + ציון + Earnings</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{display:"flex",gap:6,marginBottom:8}}>
+        {[{id:"הכל",label:"הכל"},{id:"מומלץ",label:"✅ מומלץ"},{id:"מסוכן",label:"⚠️ מסוכן"},{id:"לא לסחור",label:"❌ לא לסחור"}].map(f=>{
+          const active=filter===f.id;
+          const c=f.id==="מומלץ"?"#00ff87":f.id==="מסוכן"?"#ffd93d":f.id==="לא לסחור"?"#ff6b6b":"#555";
+          return(
+            <button key={f.id} className="btn" onClick={()=>setFilter(f.id)} style={{flex:1,background:active?c+"18":"#0d0d18",border:`1px solid ${active?c+"60":"#1a1a2e"}`,borderRadius:10,color:active?c:"#555",padding:"7px 4px",fontSize:11,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400,whiteSpace:"nowrap"}}>
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Sort */}
+      <div style={{display:"flex",gap:6,marginBottom:12}}>
+        {[{id:"score",l:"לפי ציון עסקה"},{id:"total",l:"לפי ציון מניה"},{id:"rsi",l:"לפי RSI"}].map(s=>(
+          <button key={s.id} className="btn" onClick={()=>setSortBy(s.id)} style={{flex:1,background:sortBy===s.id?"#00ff8715":"#0d0d18",border:`1px solid ${sortBy===s.id?"#00ff8740":"#1a1a2e"}`,borderRadius:8,color:sortBy===s.id?"#00ff87":"#444",padding:"6px 4px",fontSize:10,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
+            {s.l}
+          </button>
+        ))}
+      </div>
+
+      {/* Stock list */}
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {filtered.map((s,i)=>{
+          const pct=s.tradeScore;
+          return(
+            <div key={s.symbol} style={{background:s.dec.bg,border:`1px solid ${s.dec.border}`,borderRight:`3px solid ${s.dec.color}`,borderRadius:14,padding:"14px 16px",animation:`fadeUp .25s ease ${i*.03}s both`}}>
+
+              {/* Top row */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{color:"#fff",fontWeight:800,fontSize:16,fontFamily:"'IBM Plex Mono',monospace"}}>{s.symbol}</span>
+                  <span style={{color:"#555",fontSize:12}}>{s.name}</span>
+                  {s.hasEarningsSoon&&(
+                    <span style={{background:"#fb923c20",color:"#fb923c",fontSize:10,padding:"2px 7px",borderRadius:20,fontWeight:700,animation:s.earningDays<=1?"pulse 1.5s infinite":"none"}}>
+                      📅 {s.earningDays===0?"היום":s.earningDays===1?"מחר":`${s.earningDays}י`}
+                    </span>
+                  )}
+                </div>
+                {/* Verdict badge */}
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
+                  <span style={{fontSize:18}}>{s.dec.icon}</span>
+                  <span style={{color:s.dec.color,fontSize:9,fontWeight:700,letterSpacing:0.3,whiteSpace:"nowrap"}}>{s.dec.eng}</span>
+                </div>
+              </div>
+
+              {/* Score bar */}
+              <div style={{marginBottom:10}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                  <span style={{color:"#555",fontSize:11}}>ציון עסקה</span>
+                  <span style={{color:s.dec.color,fontSize:18,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{pct}</span>
+                </div>
+                <div style={{height:5,background:"#1a1a2e",borderRadius:3,overflow:"hidden"}}>
+                  <div style={{width:`${pct}%`,height:"100%",borderRadius:3,background:pct>=65?"linear-gradient(90deg,#00cc6a,#00ff87)":pct>=40?"linear-gradient(90deg,#ffaa00,#ffd93d)":"linear-gradient(90deg,#cc2222,#ff6b6b)",transition:"width .6s ease"}}/>
+                </div>
+              </div>
+
+              {/* Factor pills */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <div style={{background:"#060608",borderRadius:8,padding:"4px 9px",display:"flex",gap:5,alignItems:"center"}}>
+                  <span style={{color:"#444",fontSize:10}}>RSI</span>
+                  <span style={{color:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.rsi}</span>
+                </div>
+                <div style={{background:"#060608",borderRadius:8,padding:"4px 9px",display:"flex",gap:5,alignItems:"center"}}>
+                  <span style={{color:"#444",fontSize:10}}>ציון</span>
+                  <span style={{color:s.total>=68?"#00ff87":s.total>=48?"#ffd93d":"#ff6b6b",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.total}</span>
+                </div>
+                <div style={{background:"#060608",borderRadius:8,padding:"4px 9px",display:"flex",gap:5,alignItems:"center"}}>
+                  <span style={{color:"#444",fontSize:10}}>F&G</span>
+                  <span style={{color:fgInfo.color,fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{fg}</span>
+                </div>
+                <Badge sig={s.sig} sb={s.sb} sc={s.sc} sm/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Screen>
+  );
+}
+
+// ── EMOTIONAL SCORE ───────────────────────────────────────────────────
+const EMOTIONAL_CFG={
+  calm:   {label:"Calm",   he:"רגוע",  color:"#00ff87",bg:"#00ff8712",border:"#00ff8735",icon:"🟢",tip:"מצב מסחר תקין — המשך לפי התוכנית"},
+  tilt:   {label:"Tilt",   he:"מתוח",  color:"#ffd93d",bg:"#ffd93d12",border:"#ffd93d40",icon:"🟡",tip:"היזהר — הרגשות מתחילים לשלוט. עצור ובדוק"},
+  revenge:{label:"Revenge",he:"נקמה",  color:"#ff6b6b",bg:"#ff6b6b15",border:"#ff6b6b55",icon:"🔴",tip:"⛔ עצור! אל תיכנס לעסקה כרגע. הפסקה חובה"},
+};
+
+function calcEmotionalScore(tradeCount,trades){
+  const sorted=[...trades].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let consecutive=0;
+  for(const t of sorted){if(t.result==="loss")consecutive++;else break;}
+  if(consecutive>=3||tradeCount>=6)return{state:"revenge",consecutive};
+  if(consecutive>=2||tradeCount>=4)return{state:"tilt",consecutive};
+  return{state:"calm",consecutive};
+}
+
+function EmotionalBadge({state}){
+  const c=EMOTIONAL_CFG[state];
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:5,background:c.bg,border:`1px solid ${c.border}`,borderRadius:10,padding:"3px 10px",animation:state==="revenge"?"revengeFlash 1.4s infinite":"none"}}>
+      <span style={{fontSize:11}}>{c.icon}</span>
+      <span style={{color:c.color,fontSize:11,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{c.label}</span>
+      <span style={{color:c.color,fontSize:10,opacity:.75,fontFamily:"'Heebo',sans-serif"}}>· {c.he}</span>
+    </div>
+  );
+}
+
+// ── TRADE LOCK ────────────────────────────────────────────────────────
+function TradeLockBanner({reason,onUnlockRequest}){
+  return(
+    <div style={{margin:"8px 20px 0",background:"#ff6b6b18",border:"2px solid #ff6b6b55",borderRadius:14,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0,animation:"revengePulse 2s infinite",direction:"rtl"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:22}}>🔒</span>
+        <div>
+          <div style={{color:"#ff6b6b",fontSize:13,fontWeight:800,letterSpacing:.5}}>מסחר נעול</div>
+          <div style={{color:"#ff6b6b",fontSize:11,marginTop:2,opacity:.85,maxWidth:200}}>{reason}</div>
+        </div>
+      </div>
+      <button className="btn" onClick={onUnlockRequest} style={{background:"#ff6b6b20",border:"1px solid #ff6b6b50",borderRadius:10,color:"#ff6b6b",padding:"7px 14px",fontSize:12,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700,flexShrink:0}}>
+        פתח נעילה
+      </button>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PERFORMANCE INSIGHTS — Smart analysis from journal data
+// ══════════════════════════════════════════════════════════════════════
+function PerformanceInsights({onClose}){
+  const trades=SAMPLE_TRADES;
+
+  // Day analysis
+  const dayMap={};
+  trades.forEach(t=>{
+    if(!dayMap[t.day])dayMap[t.day]={wins:0,losses:0,pnl:0,total:0};
+    dayMap[t.day].total++;dayMap[t.day].pnl+=t.pnl;
+    if(t.result==="win")dayMap[t.day].wins++;else dayMap[t.day].losses++;
+  });
+  const dayEntries=Object.entries(dayMap).map(([day,d])=>({day,...d,winRate:Math.round((d.wins/d.total)*100)}));
+  const worstDay=[...dayEntries].sort((a,b)=>a.winRate-b.winRate)[0];
+  const bestDay=[...dayEntries].sort((a,b)=>b.winRate-a.winRate)[0];
+
+  // Plan adherence
+  const noplanTrades=trades.filter(t=>!t.followedPlan);
+  const planTrades=trades.filter(t=>t.followedPlan);
+  const noplanRate=Math.round((noplanTrades.filter(t=>t.result==="win").length/Math.max(noplanTrades.length,1))*100);
+  const planRate=Math.round((planTrades.filter(t=>t.result==="win").length/Math.max(planTrades.length,1))*100);
+  const deviatesPct=Math.round((noplanTrades.length/trades.length)*100);
+
+  // Time analysis
+  const hourMap={};
+  trades.forEach(t=>{
+    const h=parseInt(t.hour.split(":")[0]);
+    const period=h<11?"בוקר":h<14?"צהריים":"אחה\"צ";
+    if(!hourMap[period])hourMap[period]={wins:0,total:0,pnl:0};
+    hourMap[period].total++;hourMap[period].pnl+=t.pnl;
+    if(t.result==="win")hourMap[period].wins++;
+  });
+  const timeEntries=Object.entries(hourMap).map(([period,d])=>({period,...d,winRate:Math.round((d.wins/d.total)*100)}));
+  const bestTime=[...timeEntries].sort((a,b)=>b.winRate-a.winRate)[0];
+
+  // Emotion analysis
+  const emotionMap={};
+  trades.forEach(t=>{
+    if(!emotionMap[t.emotion])emotionMap[t.emotion]={wins:0,total:0};
+    emotionMap[t.emotion].total++;
+    if(t.result==="win")emotionMap[t.emotion].wins++;
+  });
+  const emotionEntries=Object.entries(emotionMap).map(([e,d])=>({e,...d,winRate:Math.round((d.wins/d.total)*100)}));
+  const worstEmotion=[...emotionEntries].sort((a,b)=>a.winRate-b.winRate)[0];
+  const bestEmotion=[...emotionEntries].sort((a,b)=>b.winRate-a.winRate)[0];
+
+  // Consistency
+  const pnls=trades.map(t=>t.pnl);
+  const avgPnl=pnls.reduce((a,b)=>a+b,0)/pnls.length;
+  const stdDev=Math.sqrt(pnls.reduce((a,b)=>a+Math.pow(b-avgPnl,2),0)/pnls.length);
+  const isInconsistent=stdDev>Math.abs(avgPnl)*1.5;
+
+  // Setup analysis
+  const setupMap={};
+  trades.forEach(t=>{
+    if(!setupMap[t.setup])setupMap[t.setup]={wins:0,total:0};
+    setupMap[t.setup].total++;if(t.result==="win")setupMap[t.setup].wins++;
+  });
+  const setupEntries=Object.entries(setupMap).map(([s,d])=>({s,...d,winRate:Math.round((d.wins/d.total)*100)}));
+  const bestSetup=[...setupEntries].sort((a,b)=>b.winRate-a.winRate)[0];
+
+  const EMOJIS={focused:"🔥",neutral:"😐",stress:"😤",fear:"😨",greed:"🤑"};
+  const ELABEL={focused:"ממוקד",neutral:"ניטרלי",stress:"לחץ",fear:"פחד",greed:"חמדנות"};
+
+  const insights=[
+    {
+      severity:worstDay.winRate<40?"danger":"warning",icon:"📅",
+      title:worstDay.winRate<40?`אתה מפסיד בימי ${worstDay.day}`:`ביצועים חלשים בימי ${worstDay.day}`,
+      sub:`${worstDay.winRate}% הצלחה · P&L: ${worstDay.pnl>=0?"+":""}$${worstDay.pnl}`,
+      advice:`שקול להימנע ממסחר בימי ${worstDay.day} או לצמצם פוזיציות`,
+      bar:{value:worstDay.winRate},
+    },
+    {
+      severity:deviatesPct>30?"danger":"warning",icon:"📋",
+      title:deviatesPct>30?"אתה חורג מהשיטה שלך":"יש חריגות מהתוכנית",
+      sub:`${deviatesPct}% מהעסקאות בלי תוכנית · עם תוכנית: ${planRate}% · בלי: ${noplanRate}%`,
+      advice:`עקיבה לתוכנית משפרת ביצועים ב-${planRate-noplanRate}% — זה ההבדל בין רווח להפסד`,
+      bar:{value:planRate,compare:noplanRate},
+    },
+    {
+      severity:isInconsistent?"danger":"ok",icon:"📊",
+      title:isInconsistent?"הטריידים שלך לא עקביים":"עקביות סבירה",
+      sub:`סטיית תקן: $${stdDev.toFixed(0)} · ממוצע לעסקה: ${avgPnl>=0?"+":""}$${avgPnl.toFixed(0)}`,
+      advice:isInconsistent?"גדלי הפוזיציות שלך משתנים מאוד — עבוד עם גדלים אחידים לפי שיטה":"המשך לשמור על גדלים עקביים",
+      bar:null,
+    },
+    {
+      severity:"ok",icon:"⏰",
+      title:`הזמן הטוב ביותר שלך הוא ${bestTime.period}`,
+      sub:`${bestTime.winRate}% הצלחה · ${bestTime.total} עסקאות בפרק זה`,
+      advice:`רכז את רוב הפעילות ב${bestTime.period} לתוצאות מיטביות`,
+      bar:{value:bestTime.winRate},
+    },
+    {
+      severity:worstEmotion&&worstEmotion.winRate<30?"danger":"warning",
+      icon:EMOJIS[worstEmotion?.e]||"🧬",
+      title:`${ELABEL[worstEmotion?.e]||worstEmotion?.e} = הפסדים`,
+      sub:`כש${ELABEL[worstEmotion?.e]} אתה מצליח רק ${worstEmotion?.winRate}% מהעסקאות`,
+      advice:`כש${ELABEL[bestEmotion?.e]} ${EMOJIS[bestEmotion?.e]} אתה מצליח ${bestEmotion?.winRate}% — זה המצב שלך`,
+      bar:null,
+    },
+    {
+      severity:"ok",icon:"🎯",
+      title:`הסטאפ החזק שלך: ${bestSetup?.s}`,
+      sub:`${bestSetup?.winRate}% הצלחה · ${bestSetup?.total} עסקאות`,
+      advice:`התמקד ב-${bestSetup?.s} — שם הכסף שלך`,
+      bar:{value:bestSetup?.winRate},
+    },
+  ];
+
+  const SEV={
+    danger:{bg:"#ff6b6b12",border:"#ff6b6b40",color:"#ff6b6b",dot:"#ff6b6b"},
+    warning:{bg:"#ffd93d10",border:"#ffd93d35",color:"#ffd93d",dot:"#ffd93d"},
+    ok:{bg:"#00ff8710",border:"#00ff8732",color:"#00ff87",dot:"#00ff87"},
+  };
+
+  return(
+    <Screen title="💡 תובנות ביצועים" onBack={onClose} accent="#a78bfa">
+      <div style={{color:"#444",fontSize:12,marginBottom:16,textAlign:"center",lineHeight:1.6}}>
+        ניתוח חכם מבוסס על {trades.length} העסקאות האחרונות שלך
+      </div>
+
+      {insights.map((ins,i)=>{
+        const S=SEV[ins.severity];
+        return(
+          <div key={i} style={{background:S.bg,border:`1px solid ${S.border}`,borderRadius:16,padding:"16px",marginBottom:12,borderRight:`3px solid ${S.dot}`,animation:`fadeUp .3s ease ${i*.08}s both`}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+              <div style={{fontSize:24,flexShrink:0,marginTop:2}}>{ins.icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{color:S.color,fontSize:15,fontWeight:700,marginBottom:4}}>{ins.title}</div>
+                <div style={{color:"#666",fontSize:12,marginBottom:ins.bar?8:6}}>{ins.sub}</div>
+                {ins.bar&&(
+                  <div style={{marginBottom:8}}>
+                    <div style={{height:5,background:"#1a1a2e",borderRadius:3,overflow:"hidden",marginBottom:ins.bar.compare!==undefined?5:0}}>
+                      <div style={{width:`${ins.bar.value}%`,height:"100%",borderRadius:3,background:S.color,transition:"width 1s ease"}}/>
+                    </div>
+                    {ins.bar.compare!==undefined&&(
+                      <div style={{height:5,background:"#1a1a2e",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{width:`${ins.bar.compare}%`,height:"100%",borderRadius:3,background:"#ff6b6b70",transition:"width 1s ease"}}/>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div style={{color:"#666",fontSize:11,fontStyle:"italic"}}>{ins.advice}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Day breakdown visual */}
+      <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:16,padding:"16px",marginTop:4}}>
+        <div style={{color:"#555",fontSize:11,marginBottom:14,letterSpacing:1}}>ביצועים לפי יום</div>
+        {[...dayEntries].sort((a,b)=>b.winRate-a.winRate).map(({day,winRate,pnl,total})=>(
+          <div key={day} style={{display:"flex",alignItems:"center",gap:10,marginBottom:11}}>
+            <div style={{width:54,color:"#888",fontSize:12,flexShrink:0,textAlign:"right"}}>{day}</div>
+            <div style={{flex:1,height:7,background:"#1a1a2e",borderRadius:4}}>
+              <div style={{width:`${winRate}%`,height:"100%",borderRadius:4,background:winRate>=60?"#00ff87":winRate>=40?"#ffd93d":"#ff6b6b",transition:"width 1s ease",boxShadow:winRate>=60?"0 0 8px #00ff8740":"none"}}/>
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
+              <span style={{color:winRate>=60?"#00ff87":winRate>=40?"#ffd93d":"#ff6b6b",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",width:34,textAlign:"right"}}>{winRate}%</span>
+              <span style={{color:pnl>=0?"#00ff87":"#ff6b6b",fontSize:11,fontFamily:"'IBM Plex Mono',monospace",width:54,textAlign:"right"}}>{pnl>=0?"+":""}${pnl}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hour heatmap */}
+      <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:16,padding:"16px",marginTop:12,marginBottom:4}}>
+        <div style={{color:"#555",fontSize:11,marginBottom:14,letterSpacing:1}}>ביצועים לפי שעה ביום</div>
+        <div style={{display:"flex",gap:10}}>
+          {[...timeEntries].sort((a,b)=>a.period.localeCompare(b.period)).map(({period,winRate,total,pnl})=>(
+            <div key={period} style={{flex:1,background:winRate>=60?"#00ff8715":winRate>=40?"#ffd93d10":"#ff6b6b15",border:`1px solid ${winRate>=60?"#00ff8735":winRate>=40?"#ffd93d30":"#ff6b6b30"}`,borderRadius:12,padding:"12px",textAlign:"center"}}>
+              <div style={{color:winRate>=60?"#00ff87":winRate>=40?"#ffd93d":"#ff6b6b",fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{winRate}%</div>
+              <div style={{color:"#888",fontSize:12,marginTop:4,fontWeight:600}}>{period}</div>
+              <div style={{color:"#444",fontSize:10,marginTop:3}}>{total} עסקאות</div>
+              <div style={{color:pnl>=0?"#00ff8790":"#ff6b6b90",fontSize:10,fontFamily:"'IBM Plex Mono',monospace",marginTop:2}}>{pnl>=0?"+":""}${pnl}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Screen>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PRE-TRADE AI COACH — real-time feedback before every trade
+// ══════════════════════════════════════════════════════════════════════
+function PreTradeAdvisor({emotional, tradeCount, todayPnl, profile}){
+  const port    = profile?.portfolio    || 50000;
+  const risk    = profile?.riskPerTrade || 1;
+  const riskAmt = port * risk / 100;
+
+  const maxLoss     = port * (profile?.maxDailyLoss || 3) / 100;
+  const lossAmt     = Math.abs(Math.min(0, todayPnl));
+  const lossPercent = (lossAmt / maxLoss) * 100;
+
+  const isRevenge = emotional.state === "revenge";
+  const isTilt    = emotional.state === "tilt";
+
+  // Earnings today or tomorrow
+  const urgentEarnings = EARNINGS_DATA
+    .map(e => ({...e, days: daysUntil(e.date)}))
+    .filter(e => e.days >= 0 && e.days <= 1);
+
+  // Stocks with RSI > 70
+  const overbought = ALL_STOCKS.filter(s => s.rsi > 70);
+  const fg         = FEAR_GREED_VALUE;
+  const fgExtreme  = fg <= 20 || fg >= 85;
+
+  // ── Build verdict ──────────────────────────────────────────────────
+  let verdict, color, bg, border, icon;
+
+  if (isRevenge) {
+    icon    = "🔴";
+    color   = "#ff6b6b";
+    bg      = "#ff6b6b12";
+    border  = "#ff6b6b55";
+    verdict = "עצור! מצב Revenge זוהה — אל תיכנס לעסקה כרגע";
+  } else if (isTilt && urgentEarnings.length > 0) {
+    icon    = "🔴";
+    color   = "#ff6b6b";
+    bg      = "#ff6b6b12";
+    border  = "#ff6b6b55";
+    verdict = `Tilt + דיווח ${urgentEarnings[0].symbol} היום — המתן`;
+  } else if (isRevenge || (isTilt && lossPercent > 50)) {
+    icon    = "🔴";
+    color   = "#ff6b6b";
+    bg      = "#ff6b6b12";
+    border  = "#ff6b6b55";
+    verdict = `Tilt + ${lossPercent.toFixed(0)}% מהמגבלה היומית — עצור`;
+  } else if (isTilt) {
+    icon    = "🟡";
+    color   = "#ffd93d";
+    bg      = "#ffd93d10";
+    border  = "#ffd93d45";
+    verdict = "מצב Tilt — הקטן פוזיציות ב-50% ופעל לפי תוכנית בלבד";
+  } else if (urgentEarnings.length > 0) {
+    icon    = "🟡";
+    color   = "#ffd93d";
+    bg      = "#ffd93d10";
+    border  = "#ffd93d45";
+    verdict = `דיווח ${urgentEarnings.map(e=>e.symbol).join(', ')} היום — הימנע מפוזיציות גדולות`;
+  } else if (overbought.length >= 14) {
+    icon    = "🟡";
+    color   = "#ffd93d";
+    bg      = "#ffd93d10";
+    border  = "#ffd93d45";
+    verdict = `RSI גבוה ב-${overbought.length} מניות — שוק מתוח, היזהר בקנייה`;
+  } else if (fgExtreme && fg <= 20) {
+    icon    = "🟡";
+    color   = "#ffd93d";
+    bg      = "#ffd93d10";
+    border  = "#ffd93d45";
+    verdict = `פחד קיצוני (F&G ${fg}) — אל תמכור בפאניקה, בדוק תוכנית`;
+  } else {
+    icon    = "🟢";
+    color   = "#00ff87";
+    bg      = "#00ff8712";
+    border  = "#00ff8740";
+    const os = ALL_STOCKS.filter(s => s.rsi < 30).length;
+    verdict = os > 2
+      ? `מצב תקין · ${os} מניות RSI נמוך — הזדמנויות קנייה · פעל לפי התוכנית`
+      : "מצב רגשי תקין · שוק ניתן למסחר · פעל לפי התוכנית שלך";
+  }
+
+  // ── Position size recommendation ───────────────────────────────────
+  let posMsg;
+  if (isRevenge)                         posMsg = "אסור לפתוח עסקה";
+  else if (isTilt || lossPercent > 50)   posMsg = `$${(riskAmt * 0.5).toFixed(0)} (50% מהרגיל)`;
+  else                                   posMsg = `$${riskAmt.toFixed(0)} · סיכון ${risk}%`;
+
+  // ── Warning pills ──────────────────────────────────────────────────
+  const pills = [];
+  if (isRevenge)  pills.push({label:"⛔ Revenge", c:"#ff6b6b"});
+  else if (isTilt) pills.push({label:"⚠️ Tilt",   c:"#ffd93d"});
+  urgentEarnings.forEach(e => pills.push({label:`📅 ${e.symbol} ${e.days===0?"היום":"מחר"}`, c:"#fb923c"}));
+  overbought.filter(s=>s.total>=60).slice(0,2).forEach(s => pills.push({label:`RSI ${s.rsi} ${s.symbol}`, c:"#ffd93d"}));
+  if (fgExtreme) pills.push({label:`F&G ${fg}`, c:fg<=20?"#ff6b6b":"#00cc55"});
+
+  return (
+    <div style={{margin:"6px 20px 0", background:bg, border:`1px solid ${border}`, borderRadius:12, padding:"10px 14px", flexShrink:0, direction:"rtl"}}>
+      <div style={{display:"flex", alignItems:"flex-start", gap:10}}>
+        <span style={{fontSize:16, flexShrink:0, marginTop:2}}>{icon}</span>
+        <div style={{flex:1, minWidth:0}}>
+          <div style={{color:"#555", fontSize:10, marginBottom:3, letterSpacing:.5}}>🤖 AI COACH · המלצה לפני עסקה</div>
+          <div style={{color, fontSize:13, fontWeight:700, lineHeight:1.5}}>{verdict}</div>
+        </div>
+        <div style={{flexShrink:0, textAlign:"left", minWidth:90}}>
+          <div style={{color:"#444", fontSize:9, marginBottom:2}}>גודל מומלץ</div>
+          <div style={{color, fontSize:11, fontWeight:700, fontFamily:"'IBM Plex Mono',monospace"}}>{posMsg}</div>
+        </div>
+      </div>
+      {pills.length > 0 && (
+        <div style={{display:"flex", gap:6, marginTop:8, flexWrap:"wrap"}}>
+          {pills.map((p,i) => (
+            <span key={i} style={{background:p.c+"20", color:p.c, fontSize:10, padding:"2px 8px", borderRadius:20, fontWeight:700, border:`1px solid ${p.c}40`}}>{p.label}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── ONBOARDING QUESTIONNAIRE ──────────────────────────────────────────
+const ONBOARDING_KEY = "tradeos_onboarding_v1";
+
+function OnboardingScreen({onComplete}){
+  const [step,setStep]=useState(0);
+  const [answers,setAnswers]=useState({experience:null,portfolioSize:null,tradingStyle:null});
+  const [animating,setAnimating]=useState(false);
+
+  const questions=[
+    {
+      key:"experience",
+      title:"מה רמת הניסיון שלך?",
+      subtitle:"נתאים את הממשק לרמה שלך",
+      options:[
+        {value:"beginner",   label:"מתחיל",   icon:"🌱", desc:"מסחר עד שנה"},
+        {value:"advanced",   label:"מתקדם",   icon:"📈", desc:"1–5 שנות ניסיון"},
+        {value:"professional",label:"מקצועי", icon:"🏆", desc:"מעל 5 שנים"},
+      ]
+    },
+    {
+      key:"portfolioSize",
+      title:"מה גודל התיק שלך?",
+      subtitle:"נכוון את הכלים לגודל ההון שלך",
+      options:[
+        {value:"small",  label:"עד $10K",      icon:"💵", desc:"מתחיל לבנות הון"},
+        {value:"medium", label:"$10K–$50K",    icon:"💰", desc:"תיק ביניים"},
+        {value:"large",  label:"מעל $50K",     icon:"💎", desc:"תיק גדול"},
+      ]
+    },
+    {
+      key:"tradingStyle",
+      title:"מה סגנון המסחר שלך?",
+      subtitle:"נציג את הכלים הרלוונטיים ביותר",
+      options:[
+        {value:"swing", label:"סווינג",  icon:"🌊", desc:"החזקה ימים–שבועות"},
+        {value:"daily", label:"יומי",    icon:"⚡", desc:"פתיחה וסגירה ביום"},
+        {value:"both",  label:"שניהם",  icon:"🎯", desc:"גמישות מלאה"},
+      ]
+    },
+  ];
+
+  function pick(val){
+    const newAnswers={...answers,[questions[step].key]:val};
+    setAnswers(newAnswers);
+    setAnimating(true);
+    setTimeout(()=>{
+      setAnimating(false);
+      if(step<questions.length-1) setStep(step+1);
+      else onComplete(newAnswers);
+    },300);
+  }
+
+  const q=questions[step];
+  const portfolioDefault={small:10000,medium:30000,large:100000};
+
+  return(
+    <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#060608",direction:"rtl",fontFamily:"'Heebo',sans-serif",padding:24}}>
+      <style>{CSS}</style>
+      {/* Logo */}
+      <div style={{marginBottom:40,textAlign:"center"}}>
+        <div style={{width:56,height:56,background:"linear-gradient(135deg,#00ff87,#00cc6a)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,color:"#000",fontFamily:"'Syne',sans-serif",margin:"0 auto 14px"}}>TO</div>
+        <div style={{color:"#fff",fontSize:24,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:2}}>TRADEOS</div>
+        <div style={{color:"#444",fontSize:13,marginTop:4}}>נגדיר את הפלטפורמה לפי הצרכים שלך</div>
+      </div>
+
+      {/* Progress dots */}
+      <div style={{display:"flex",gap:8,marginBottom:36}}>
+        {questions.map((_,i)=>(
+          <div key={i} style={{width:i===step?24:8,height:8,borderRadius:4,background:i<step?"#00ff87":i===step?"#00ff87":"#1a1a2e",transition:"all .3s"}}/>
+        ))}
+      </div>
+
+      {/* Question card */}
+      <div style={{background:"#0a0a12",border:"1px solid #1a1a2e",borderRadius:20,padding:"32px 28px",maxWidth:440,width:"100%",opacity:animating?0:1,transform:animating?"translateX(-20px)":"translateX(0)",transition:"all .25s"}}>
+        <div style={{fontSize:22,fontWeight:700,color:"#fff",marginBottom:6,lineHeight:1.4}}>{q.title}</div>
+        <div style={{fontSize:13,color:"#555",marginBottom:28}}>{q.subtitle}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {q.options.map(opt=>(
+            <button key={opt.value} className="btn" onClick={()=>pick(opt.value)}
+              style={{display:"flex",alignItems:"center",gap:14,background:"#0d0d18",border:"1px solid #1e1e2e",borderRadius:14,padding:"16px 18px",cursor:"pointer",textAlign:"right",transition:"all .2s",width:"100%"}}>
+              <span style={{fontSize:26,flexShrink:0}}>{opt.icon}</span>
+              <div style={{flex:1}}>
+                <div style={{color:"#fff",fontSize:16,fontWeight:600,fontFamily:"'Heebo',sans-serif"}}>{opt.label}</div>
+                <div style={{color:"#444",fontSize:12,marginTop:2}}>{opt.desc}</div>
+              </div>
+              <span style={{color:"#222",fontSize:18}}>‹</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{color:"#222",fontSize:11,marginTop:28}}>שאלה {step+1} מתוך {questions.length}</div>
+    </div>
+  );
+}
+
 export default function App(){
   const [tab,setTab]=useState("scanner");
-  const [modal,setModal]=useState(null); // profile|sizer|circuit|journal|positions|coach|mental|earnings|econ|news
-  const [profile,setProfile]=useState({name:"סוחר",portfolio:50000,riskPerTrade:1,maxDailyLoss:3,style:"swing",experience:"intermediate"});
+  const [modal,setModal]=useState(null); // profile|sizer|circuit|journal|positions|coach|mental|earnings|econ|news|glossary|decision|insights
+
+  // Load saved onboarding answers
+  const savedOnboarding=()=>{try{const v=localStorage.getItem(ONBOARDING_KEY);return v?JSON.parse(v):null;}catch{return null;}};
+  const [onboarding,setOnboarding]=useState(()=>savedOnboarding());
+
+  function buildProfileFromOnboarding(answers){
+    const portfolioMap={small:8000,medium:30000,large:100000};
+    const styleMap={swing:"swing",daily:"day",both:"swing"};
+    return {
+      name:"סוחר",
+      portfolio:portfolioMap[answers.portfolioSize]||50000,
+      riskPerTrade:answers.experience==="beginner"?1:answers.experience==="professional"?2:1.5,
+      maxDailyLoss:answers.experience==="beginner"?2:3,
+      style:styleMap[answers.tradingStyle]||"swing",
+      experience:answers.experience||"intermediate",
+      portfolioSize:answers.portfolioSize||"medium",
+      tradingStyle:answers.tradingStyle||"both",
+    };
+  }
+
+  const [profile,setProfile]=useState(()=>{
+    const saved=savedOnboarding();
+    if(saved) return buildProfileFromOnboarding(saved);
+    return {name:"סוחר",portfolio:50000,riskPerTrade:1,maxDailyLoss:3,style:"swing",experience:"intermediate",portfolioSize:"medium",tradingStyle:"both"};
+  });
   const [circuitLocked,setCircuitLocked]=useState(false);
+  const [revWarnDismissed,setRevWarnDismissed]=useState(false);
+  const [tradeLocked,setTradeLocked]=useState(false);
+  const [lockReason,setLockReason]=useState(null);
+  const [showUnlockConfirm,setShowUnlockConfirm]=useState(false);
   const todayPnl=-320; const tradeCount=3; const lastTradeTime=Date.now()-8*60000;
   const TOP=ALL_STOCKS.reduce((a,b)=>a.total>b.total?a:b);
+  const emotional=calcEmotionalScore(tradeCount,SAMPLE_TRADES);
+  const showRevWarning=emotional.state==="revenge"&&!revWarnDismissed;
+
+  useEffect(()=>{
+    if(tradeLocked) return;
+    const sorted=[...SAMPLE_TRADES].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    let consecutive=0;
+    for(const t of sorted){if(t.result==="loss")consecutive++;else break;}
+    if(consecutive>=3){
+      const names=sorted.slice(0,consecutive).map(t=>t.symbol).join(', ');
+      setTradeLocked(true);
+      setLockReason(`3 הפסדים רצופים — ${names}`);
+      return;
+    }
+    const maxLoss=profile.portfolio*(profile.maxDailyLoss||3)/100;
+    if(Math.abs(Math.min(0,todayPnl))>=maxLoss){
+      setTradeLocked(true);
+      setLockReason(`חריגה מהפסד יומי — $${Math.abs(todayPnl)} מתוך $${maxLoss.toFixed(0)}`);
+    }
+  },[profile,tradeLocked]);
+
+  const lockManually=()=>{
+    setTradeLocked(true);
+    setLockReason("נעילה ידנית על ידי הסוחר");
+  };
 
   const openModal=(m)=>setModal(m);
   const closeModal=()=>setModal(null);
+
+  function completeOnboarding(answers){
+    try{localStorage.setItem(ONBOARDING_KEY,JSON.stringify(answers));}catch{}
+    setOnboarding(answers);
+    setProfile(buildProfileFromOnboarding(answers));
+  }
+
+  // Show onboarding if not completed
+  if(!onboarding) return <OnboardingScreen onComplete={completeOnboarding}/>;
 
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",background:"#060608",direction:"rtl",fontFamily:"'Heebo',sans-serif",overflow:"hidden"}}>
@@ -1296,14 +2318,23 @@ export default function App(){
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:32,height:32,background:"linear-gradient(135deg,#00ff87,#00cc6a)",borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#000",fontFamily:"'Syne',sans-serif"}}>TO</div>
           <div>
-            <span style={{color:"#fff",fontSize:16,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:1}}>TRADEOS</span>
-            {profile?.name&&<span style={{color:"#333",fontSize:11,marginRight:8}}>{profile.name}</span>}
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{color:"#fff",fontSize:16,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:1}}>TRADEOS</span>
+              {profile?.experience&&(()=>{
+                const lv={beginner:{label:"מתחיל",c:"#ffd93d",bg:"#ffd93d18"},advanced:{label:"מתקדם",c:"#00ff87",bg:"#00ff8718"},professional:{label:"מקצועי",c:"#a78bfa",bg:"#a78bfa18"}};
+                const l=lv[profile.experience]||lv.advanced;
+                return <span style={{background:l.bg,border:`1px solid ${l.c}40`,borderRadius:6,color:l.c,fontSize:10,padding:"2px 7px",fontWeight:600,fontFamily:"'Heebo',sans-serif"}}>{l.label}</span>;
+              })()}
+            </div>
+            {profile?.name&&<div style={{color:"#333",fontSize:11,marginTop:1}}>{profile.name}</div>}
           </div>
         </div>
         <div style={{display:"flex",gap:6}}>
+          <button className="btn" onClick={tradeLocked?()=>setShowUnlockConfirm(true):lockManually} style={{background:tradeLocked?"#ff6b6b22":"#0d0d18",border:`1px solid ${tradeLocked?"#ff6b6b55":"#1a1a2e"}`,borderRadius:10,color:tradeLocked?"#ff6b6b":"#555",padding:"7px 10px",fontSize:14,cursor:"pointer",animation:tradeLocked?"pulse 1.5s infinite":"none"}}>{tradeLocked?"🔒":"🔓"}</button>
           <button className="btn" onClick={()=>openModal("circuit")} style={{background:circuitLocked?"#ff6b6b20":"#0d0d18",border:`1px solid ${circuitLocked?"#ff6b6b40":"#1a1a2e"}`,borderRadius:10,color:circuitLocked?"#ff6b6b":"#555",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>🛡️</button>
           <button className="btn" onClick={()=>openModal("mental")} style={{background:"#ffd93d15",border:"1px solid #ffd93d30",borderRadius:10,color:"#ffd93d",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>🧠</button>
           <button className="btn" onClick={()=>openModal("coach")} style={{background:"#a78bfa15",border:"1px solid #a78bfa30",borderRadius:10,color:"#a78bfa",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>🤖</button>
+          <button className="btn" title="שנה פרופיל" onClick={()=>{try{localStorage.removeItem(ONBOARDING_KEY);}catch{}setOnboarding(null);}} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:10,color:"#444",padding:"7px 10px",fontSize:12,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>⚙</button>
           <button className="btn" onClick={()=>openModal("profile")} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:10,color:"#666",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>👤</button>
         </div>
       </div>
@@ -1311,12 +2342,16 @@ export default function App(){
       {/* Quick Access Bar */}
       <div style={{background:"#080810",borderBottom:"1px solid #111",padding:"10px 20px",display:"flex",gap:8,overflowX:"auto",flexShrink:0}}>
         {[
+          {icon:"🎯",label:"החלטה",modal:"decision",color:"#00ff87"},
           {icon:"📈",label:"פוזיציות",modal:"positions",color:"#00ff87"},
           {icon:"📰",label:"חדשות",modal:"news",color:"#e879f9",alert:NEWS_DB.filter(n=>n.sent==="negative"&&n.mins<60).length>0},
           {icon:"📐",label:"Position Size",modal:"sizer",color:"#ffd93d"},
           {icon:"📅",label:"דיווחים",modal:"earnings",color:"#fb923c",alert:EARNINGS_DATA.map(e=>({...e,days:daysUntil(e.date)})).filter(e=>e.days>=0&&e.days<3).length>0},
           {icon:"🌐",label:"כלכלה",modal:"econ",color:"#38bdf8",alert:ECON_EVENTS.map(e=>({...e,days:daysUntil(e.date)})).filter(e=>e.days>=0&&e.days<2&&e.impact==="high").length>0},
           {icon:"📋",label:"יומן",modal:"journal",color:"#ffd93d"},
+          {icon:"💡",label:"תובנות",modal:"insights",color:"#a78bfa"},
+          {icon:"🗺️",label:"סקטורים",modal:"heatmap",color:"#38bdf8"},
+          {icon:"📖",label:"מילון",modal:"glossary",color:"#a78bfa"},
           {icon:"🛡️",label:"הגנות",modal:"circuit",color:"#ff6b6b"},
         ].map(({icon,label,modal:m,color,alert})=>(
           <button key={m} className="btn" onClick={()=>openModal(m)} style={{display:"flex",alignItems:"center",gap:6,background:"#0d0d18",border:`1px solid ${alert?"#ff6b6b40":"#1a1a2e"}`,borderRadius:12,color,padding:"8px 14px",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif",fontWeight:600,position:"relative"}}>
@@ -1328,6 +2363,9 @@ export default function App(){
 
       {/* Fear & Greed */}
       <FearGreedMeter/>
+
+      {/* Trade Lock Banner */}
+      {tradeLocked&&<TradeLockBanner reason={lockReason} onUnlockRequest={()=>setShowUnlockConfirm(true)}/>}
 
       {/* Morning pill */}
       <div style={{margin:"8px 20px 0",background:"linear-gradient(135deg,#0a1a0a,#060608)",border:"1px solid #00ff8725",borderRadius:12,padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
@@ -1341,9 +2379,27 @@ export default function App(){
         <div style={{color:todayPnl>=0?"#00ff87":"#ff6b6b",fontSize:14,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{todayPnl>=0?"+":""}${todayPnl}</div>
       </div>
 
+      {/* Emotional Score */}
+      <div style={{margin:"6px 20px 0",background:EMOTIONAL_CFG[emotional.state].bg,border:`1px solid ${EMOTIONAL_CFG[emotional.state].border}`,borderRadius:12,padding:"9px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0,animation:emotional.state==="revenge"?"revengePulse 2s infinite":"none",direction:"rtl"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:18}}>🧬</span>
+          <div>
+            <div style={{color:"#555",fontSize:10,marginBottom:2,letterSpacing:.5}}>EMOTIONAL SCORE · ציון רגשי</div>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+              <EmotionalBadge state={emotional.state}/>
+              <span style={{color:"#444",fontSize:10,fontFamily:"'Heebo',sans-serif"}}>{emotional.consecutive} הפסד{emotional.consecutive!==1?"ות":""} ברצף · {tradeCount} עסקאות היום</span>
+            </div>
+          </div>
+        </div>
+        <div style={{color:EMOTIONAL_CFG[emotional.state].color,fontSize:10,fontFamily:"'Heebo',sans-serif",textAlign:"left",maxWidth:90,lineHeight:1.4,opacity:.85}}>{EMOTIONAL_CFG[emotional.state].tip}</div>
+      </div>
+
+      {/* AI Pre-Trade Coach */}
+      <PreTradeAdvisor emotional={emotional} tradeCount={tradeCount} todayPnl={todayPnl} profile={profile}/>
+
       {/* Scanner */}
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",marginTop:8}}>
-        <Scanner/>
+        <Scanner experience={profile.experience}/>
       </div>
 
       {/* Modals */}
@@ -1356,6 +2412,59 @@ export default function App(){
       {modal==="earnings"&&<EarningsCalendar onClose={closeModal}/>}
       {modal==="econ"&&<EconCalendar onClose={closeModal}/>}
       {modal==="news"&&<NewsScanner onClose={closeModal}/>}
+      {modal==="heatmap"&&<SectorHeatmap onClose={closeModal}/>}
+      {modal==="glossary"&&<GlossaryScreen onClose={closeModal}/>}
+      {modal==="decision"&&<TradeDecisionEngine onClose={closeModal}/>}
+      {modal==="insights"&&<PerformanceInsights onClose={closeModal}/>}
+      {/* Revenge Trading Warning Overlay */}
+      {showRevWarning&&(
+        <div style={{position:"fixed",inset:0,background:"#000000cc",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,direction:"rtl",fontFamily:"'Heebo',sans-serif"}}>
+          <div style={{background:"#0d0509",border:"2px solid #ff6b6b",borderRadius:20,padding:"28px 24px",maxWidth:340,width:"100%",animation:"shake .5s ease",boxShadow:"0 0 60px #ff6b6b40"}}>
+            <div style={{textAlign:"center",marginBottom:18}}>
+              <div style={{fontSize:52,marginBottom:8}}>🚨</div>
+              <div style={{color:"#ff6b6b",fontSize:22,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:1}}>REVENGE TRADING</div>
+              <div style={{color:"#ff6b6b",fontSize:13,opacity:.8,marginTop:4}}>מצב נקמה זוהה</div>
+            </div>
+            <div style={{background:"#ff6b6b12",border:"1px solid #ff6b6b30",borderRadius:12,padding:"14px",marginBottom:18}}>
+              <div style={{color:"#ff6b6b",fontSize:13,fontWeight:700,marginBottom:6}}>⚠️ אל תיכנס לעסקה כרגע</div>
+              <div style={{color:"#888",fontSize:12,lineHeight:1.7}}>
+                זוהו <span style={{color:"#ff6b6b",fontWeight:700}}>{emotional.consecutive} הפסדים ברצף</span> ו-<span style={{color:"#ff6b6b",fontWeight:700}}>{tradeCount} עסקאות היום</span>.
+                במצב זה ההחלטות רגשיות ולא רציונליות — סכנה להפסדים כפולים.
+              </div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{background:"#1a0a0a",borderRadius:10,padding:"10px 14px",color:"#666",fontSize:12}}>✅ קח הפסקה של 20 דקות</div>
+              <div style={{background:"#1a0a0a",borderRadius:10,padding:"10px 14px",color:"#666",fontSize:12}}>✅ בדוק את יומן העסקאות</div>
+              <div style={{background:"#1a0a0a",borderRadius:10,padding:"10px 14px",color:"#666",fontSize:12}}>✅ עסקה הבאה רק לפי תוכנית מלאה</div>
+            </div>
+            <button className="btn" onClick={()=>setRevWarnDismissed(true)} style={{marginTop:18,width:"100%",padding:"14px",borderRadius:14,border:"1px solid #ff6b6b40",background:"#ff6b6b15",color:"#ff6b6b",fontSize:15,fontWeight:800,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
+              הבנתי — אני לוקח הפסקה
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Trade Lock Unlock Confirmation */}
+      {showUnlockConfirm&&(
+        <div style={{position:"fixed",inset:0,background:"#000000cc",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center",padding:20,direction:"rtl",fontFamily:"'Heebo',sans-serif"}}>
+          <div style={{background:"#0d0d18",border:"2px solid #ff6b6b60",borderRadius:20,padding:"28px 24px",maxWidth:320,width:"100%",animation:"fadeUp .3s ease"}}>
+            <div style={{textAlign:"center",marginBottom:18}}>
+              <div style={{fontSize:44,marginBottom:10}}>⚠️</div>
+              <div style={{color:"#fff",fontSize:18,fontWeight:800,fontFamily:"'Syne',sans-serif"}}>פתיחת נעילת מסחר</div>
+              <div style={{color:"#888",fontSize:13,marginTop:8,lineHeight:1.6}}>הנעילה הופעלה להגנה על ההון שלך.<br/>האם אתה בטוח שברצונך לפתוח?</div>
+            </div>
+            <div style={{background:"#ff6b6b12",border:"1px solid #ff6b6b35",borderRadius:12,padding:"12px 14px",marginBottom:20}}>
+              <div style={{color:"#ff6b6b",fontSize:11,fontWeight:700,marginBottom:4}}>סיבת הנעילה:</div>
+              <div style={{color:"#ff6b6b",fontSize:12,opacity:.9,lineHeight:1.5}}>{lockReason}</div>
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn" onClick={()=>setShowUnlockConfirm(false)} style={{flex:1,padding:"13px",borderRadius:12,border:"1px solid #2a2a3e",background:"#1a1a2e",color:"#888",fontSize:14,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>ביטול</button>
+              <button className="btn" onClick={()=>{setTradeLocked(false);setLockReason(null);setShowUnlockConfirm(false);}} style={{flex:1,padding:"13px",borderRadius:12,border:"1px solid #ff6b6b40",background:"#ff6b6b20",color:"#ff6b6b",fontSize:14,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>פתח נעילה</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal==="mental"&&(
         <Screen title="🧠 מוכנות מנטלית" onBack={closeModal} accent="#ffd93d">
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
