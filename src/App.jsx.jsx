@@ -912,7 +912,7 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
           <button key={f} className="btn" onClick={()=>setFilter(f)} style={{background:filter===f?"#00ff8720":"#0d0d18",border:`1px solid ${filter===f?"#00ff8760":"#1a1a2e"}`,borderRadius:20,color:filter===f?"#00ff87":"#555",padding:"6px 14px",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif"}}>{f}</button>
         ))}
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 62px 52px",gap:6,padding:"10px 20px 6px",color:"#888",fontSize:13,letterSpacing:.5,flexShrink:0}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 130px 52px",gap:6,padding:"10px 20px 6px",color:"#888",fontSize:13,letterSpacing:.5,flexShrink:0}}>
         <div>מניה</div><div style={{textAlign:"center"}}>RSI</div><div style={{textAlign:"right"}}>שינוי</div><div style={{textAlign:"center"}}>גרף</div><div style={{textAlign:"center"}}>ציון</div>
       </div>
       {q&&filtered.length===1&&onAnalyze&&(
@@ -922,7 +922,7 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
       )}
       <div style={{padding:"0 12px 20px"}}>
         {filtered.map((s,i)=>(
-          <div key={s.symbol} className="row" onClick={()=>setSel(s===sel?null:s)} style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 62px 52px",gap:6,padding:"10px 8px",borderRadius:12,background:sel?.symbol===s.symbol?"#111120":"transparent",marginBottom:2,alignItems:"center",animation:`fadeUp .3s ease ${i*.02}s both`,cursor:"pointer"}}>
+          <div key={s.symbol} className="row" onClick={()=>setSel(s===sel?null:s)} style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 130px 52px",gap:6,padding:"10px 8px",borderRadius:12,background:sel?.symbol===s.symbol?"#111120":"transparent",marginBottom:2,alignItems:"center",animation:`fadeUp .3s ease ${i*.02}s both`,cursor:"pointer"}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
                 <button onClick={e=>toggleWatch(s.symbol,e)} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",padding:"0 1px",color:watchlist.has(s.symbol)?"#ffd93d":"#2a2a3e",lineHeight:1,flexShrink:0}}>{watchlist.has(s.symbol)?"⭐":"☆"}</button>
@@ -937,7 +937,9 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
             <div style={{textAlign:"right"}}>
               <span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>
             </div>
-            <div style={{display:"flex",justifyContent:"center"}}><Spark data={s.spark} color={s.change>=0?"#00ff87":"#ff6b6b"}/></div>
+            <div style={{display:"flex",justifyContent:"center",overflow:"hidden",borderRadius:6}}>
+              <iframe loading="lazy" src={`https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=${s.symbol}&theme=dark`} style={{width:"130px",height:"100px",border:"none",pointerEvents:"none"}}/>
+            </div>
             <div style={{display:"flex",justifyContent:"center"}}><ScoreDot score={s.total}/></div>
           </div>
         ))}
@@ -2195,7 +2197,7 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
 
         {/* Block 0: TradingView Chart */}
         <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,overflow:"hidden",marginBottom:12}}>
-          <div ref={tvRef} style={{width:"100%",height:440}}/>
+          <iframe src={`https://s.tradingview.com/widgetembed/?symbol=${sym}&interval=D&timezone=Asia%2FJerusalem&theme=dark&style=1&locale=he_IL&hide_top_toolbar=0&save_image=0`} style={{width:"100%",height:"440px",border:"none",display:"block"}} allowFullScreen/>
         </div>
 
         {/* Block 1: Technical */}
