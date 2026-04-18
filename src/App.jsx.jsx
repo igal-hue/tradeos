@@ -939,13 +939,13 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
                 <span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>
               </div>
               <div style={{overflow:"hidden",borderRadius:6,height:100}}>
-                <iframe key={s.symbol} src={`https://www.tradingview.com/chart/?symbol=NASDAQ:${s.symbol}&theme=dark`} style={{width:"130px",height:"100px",border:"none",display:"block",pointerEvents:"none"}} allowFullScreen/>
+                <TVChart sym={s.symbol}/>
               </div>
               <div style={{display:"flex",justifyContent:"center"}}><ScoreDot score={s.total}/></div>
             </div>
             {sel?.symbol===s.symbol&&(
               <div style={{marginBottom:8,borderRadius:12,overflow:"hidden",border:"1px solid #1a1a2e",background:"#0a0a12",animation:"fadeUp .2s ease"}}>
-                <iframe key={s.symbol} src={`https://www.tradingview.com/chart/?symbol=NASDAQ:${s.symbol}&theme=dark`} style={{width:"100%",height:"400px",border:"none"}} allowFullScreen/>
+                <TVChart sym={s.symbol}/>
                 <div style={{padding:"10px 14px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,borderTop:"1px solid #1a1a2e"}}>
                   {[{l:"מחיר",v:`$${s.price}`,c:"#fff"},{l:"RSI",v:s.rsi,c:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d"},{l:"יעד",v:`$${s.target}`,c:"#00ff87"},{l:"סטופ",v:`$${s.stop}`,c:"#ff6b6b"}].map(({l,v,c})=>(
                     <div key={l} style={{textAlign:"center"}}>
@@ -2092,41 +2092,25 @@ function CandleChart({bars}){
 // TRADINGVIEW CHART COMPONENT
 // ══════════════════════════════════════════════════════════════════════
 function TVChart({sym}){
-  const containerId=`tv_chart_${sym}`;
   useEffect(()=>{
-    const init=()=>{
-      if(!window.TradingView)return;
-      const el=document.getElementById(containerId);
-      if(!el)return;
-      el.innerHTML='';
-      new window.TradingView.widget({
-        container_id:containerId,symbol:sym,interval:"D",theme:"dark",
-        style:"1",locale:"he_IL",toolbar_bg:"#131722",
-        width:"100%",height:400,hide_top_toolbar:false,
-        studies:["RSI@tv-basicstudies"]
-      });
-    };
-    if(window.TradingView){init();}
-    else{
-      const s=document.querySelector('script[src*="tradingview.com/tv.js"]');
-      if(s)s.addEventListener('load',init,{once:true});
-    }
-    return()=>{const el=document.getElementById(containerId);if(el)el.innerHTML='';};
+    const container=document.getElementById(`tradingview_${sym}`);
+    if(!container)return;
+    container.innerHTML='';
+    const script=document.createElement('script');
+    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.async=true;
+    script.innerHTML=JSON.stringify({
+      symbol:sym,interval:"D",width:"100%",height:400,
+      theme:"dark",style:"1",locale:"he_IL",
+      container_id:`tradingview_${sym}`
+    });
+    container.appendChild(script);
+    return()=>{if(container)container.innerHTML='';};
   },[sym]);
   return(
-    <>
-      <div id={containerId} style={{width:"100%",height:"400px"}}/>
-      <script dangerouslySetInnerHTML={{__html:`
-        (function(){
-          new TradingView.widget({
-            container_id:"${containerId}",symbol:"${sym}",interval:"D",
-            theme:"dark",style:"1",locale:"he_IL",toolbar_bg:"#131722",
-            width:"100%",height:400,hide_top_toolbar:false,
-            studies:["RSI@tv-basicstudies"]
-          });
-        })();
-      `}}/>
-    </>
+    <div className="tradingview-widget-container" style={{height:"400px"}}>
+      <div id={`tradingview_${sym}`} style={{height:"400px"}}/>
+    </div>
   );
 }
 
