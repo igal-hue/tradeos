@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
 
 export default function TVChart({ symbol }) {
+  console.log('TVChart rendering:', symbol);
   const ref = useRef();
   useEffect(() => {
     if (!ref.current) return;

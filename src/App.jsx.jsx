@@ -940,13 +940,13 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
                 <span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>
               </div>
               <div style={{overflow:"hidden",borderRadius:6,height:100}}>
-                <TVChart sym={s.symbol}/>
+                <TVChart symbol={s.symbol}/>
               </div>
               <div style={{display:"flex",justifyContent:"center"}}><ScoreDot score={s.total}/></div>
             </div>
             {sel?.symbol===s.symbol&&(
               <div style={{marginBottom:8,borderRadius:12,overflow:"hidden",border:"1px solid #1a1a2e",background:"#0a0a12",animation:"fadeUp .2s ease"}}>
-                <TVChart sym={s.symbol}/>
+                <TVChart symbol={s.symbol}/>
                 <div style={{padding:"10px 14px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,borderTop:"1px solid #1a1a2e"}}>
                   {[{l:"מחיר",v:`$${s.price}`,c:"#fff"},{l:"RSI",v:s.rsi,c:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d"},{l:"יעד",v:`$${s.target}`,c:"#00ff87"},{l:"סטופ",v:`$${s.stop}`,c:"#ff6b6b"}].map(({l,v,c})=>(
                     <div key={l} style={{textAlign:"center"}}>
