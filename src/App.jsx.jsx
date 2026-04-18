@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 import { useState, useEffect, useRef } from "react";
+import AlertsPanel from "./AlertsPanel";
+import CandlestickGuide from "./CandlestickGuide";
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Heebo:wght@300;400;500;600;700&display=swap');`;
 const CSS = `
@@ -70,11 +72,11 @@ function buildStock(s,idx){
   tech=Math.max(10,Math.min(95,tech));
   const total=Math.round(tech*.5+fund*.3+sent*.2);
   let sig,sc,sb;
-  if(total>=73){sig="קנייה חזקה";sc="#000";sb="#00ff87";}
-  else if(total>=58){sig="קנייה";sc="#000";sb="#7bff6e";}
+  if(total>=73){sig="סיגנל חיובי חזק";sc="#000";sb="#00ff87";}
+  else if(total>=58){sig="סיגנל חיובי";sc="#000";sb="#7bff6e";}
   else if(total>=42){sig="המתנה";sc="#000";sb="#ffd93d";}
-  else if(total>=27){sig="מכירה";sc="#fff";sb="#ff6b6b";}
-  else{sig="מכירה חזקה";sc="#fff";sb="#cc2222";}
+  else if(total>=27){sig="סיגנל שלילי";sc="#fff";sb="#ff6b6b";}
+  else{sig="סיגנל שלילי חזק";sc="#fff";sb="#cc2222";}
   const support=parseFloat((price*(1-r(.03,.07,12))).toFixed(2));
   const resist=parseFloat((price*(1+r(.04,.10,13))).toFixed(2));
   const stop=parseFloat((support*.985).toFixed(2));
@@ -209,7 +211,7 @@ const GLOSSARY = [
     cat:"אינדיקטור",
     color:"#ffd93d",
     short:"מד תנופה 0–100 שמזהה קנייה-יתר או מכירת-יתר",
-    body:"RSI מחשב את יחס עליות לירידות ב-14 מחזורים אחרונים. מעל 70 — המניה נחשבת קנויה-יתר (אות מכירה). מתחת ל-30 — מכורה-יתר (אות קנייה). הסוחר משתמש בו כדי לתזמן כניסות ויציאות.",
+    body:"RSI מחשב את יחס עליות לירידות ב-14 מחזורים אחרונים. מעל 70 — המניה נחשבת קנויה-יתר (נתון שלילי). מתחת ל-30 — מכורה-יתר (נתון חיובי). הסוחר משתמש בו כדי לתזמן כניסות ויציאות.",
     examples:["RSI מעל 70 → שקול מכירה","RSI מתחת ל-30 → הזדמנות קנייה","RSI 50 → ניטרלי, ממתין לכיוון"],
   },
   {
@@ -273,7 +275,7 @@ const GLOSSARY = [
     color:"#00ff87",
     short:"רמת מחיר שבה ההיצע חזק מספיק לעצור עלייה",
     body:"התנגדות היא 'תקרה' שבה בעבר נרשמו הרבה מכירות. כשהמחיר פורץ מעל התנגדות בנפח גבוה — סיגנל קנייה חזק. יעד הרווח נקבע לרוב ליד רמת התנגדות הבאה.",
-    examples:["פריצת התנגדות בנפח גבוה → קנייה חזקה","התנגדות = יעד הרווח הטבעי","התנגדות שנפרצת הופכת לתמיכה"],
+    examples:["פריצת התנגדות בנפח גבוה → סיגנל חיובי חזק","התנגדות = יעד הרווח הטבעי","התנגדות שנפרצת הופכת לתמיכה"],
   },
   {
     term:"Volume",
@@ -356,13 +358,13 @@ function ScoreDot({score,size=34}){
   return <div style={{width:size,height:size,borderRadius:"50%",border:`2.5px solid ${c}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{color:c,fontSize:size<34?10:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{score}</span></div>;
 }
 function Section({title,children,style={}}){
-  return <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:16,padding:"16px",marginBottom:12,...style}}>{title&&<div style={{color:"#555",fontSize:11,marginBottom:12,letterSpacing:1}}>{title}</div>}{children}</div>;
+  return <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:16,padding:"16px",marginBottom:12,...style}}>{title&&<div style={{color:"#555",fontSize:13,marginBottom:12,letterSpacing:1}}>{title}</div>}{children}</div>;
 }
 function StatBox({label,value,color="#fff",sub}){
   return <div style={{background:"#060608",borderRadius:12,padding:"12px",textAlign:"center"}}>
     <div style={{color,fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{value}</div>
-    <div style={{color:"#444",fontSize:10,marginTop:3}}>{label}</div>
-    {sub&&<div style={{color:"#333",fontSize:9,marginTop:2}}>{sub}</div>}
+    <div style={{color:"#999",fontSize:13,marginTop:3}}>{label}</div>
+    {sub&&<div style={{color:"#888",fontSize:9,marginTop:2}}>{sub}</div>}
   </div>;
 }
 
@@ -409,7 +411,7 @@ function TraderProfile({profile,onSave,onClose}){
           <span style={{color:"#a78bfa",fontFamily:"'IBM Plex Mono',monospace",fontWeight:700}}>{p.riskPerTrade}%</span>
         </div>
         <input type="range" min={0.5} max={5} step={0.5} value={p.riskPerTrade} onChange={e=>u("riskPerTrade",parseFloat(e.target.value))} style={{width:"100%",accentColor:"#a78bfa"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",color:"#333",fontSize:10,marginTop:4}}><span>0.5% (שמרן)</span><span>5% (אגרסיבי)</span></div>
+        <div style={{display:"flex",justifyContent:"space-between",color:"#888",fontSize:13,marginTop:4}}><span>0.5% (שמרן)</span><span>5% (אגרסיבי)</span></div>
       </div>
       <div>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
@@ -417,13 +419,13 @@ function TraderProfile({profile,onSave,onClose}){
           <span style={{color:"#ff6b6b",fontFamily:"'IBM Plex Mono',monospace",fontWeight:700}}>{p.maxDailyLoss}%</span>
         </div>
         <input type="range" min={1} max={10} step={0.5} value={p.maxDailyLoss} onChange={e=>u("maxDailyLoss",parseFloat(e.target.value))} style={{width:"100%",accentColor:"#ff6b6b"}}/>
-        <div style={{display:"flex",justifyContent:"space-between",color:"#333",fontSize:10,marginTop:4}}><span>1% (קפדן)</span><span>10% (גבוה)</span></div>
+        <div style={{display:"flex",justifyContent:"space-between",color:"#888",fontSize:13,marginTop:4}}><span>1% (קפדן)</span><span>10% (גבוה)</span></div>
       </div>
     </Section>
     <Section title="סגנון מסחר">
       {[{v:"swing",l:"Swing Trading",d:"ימים–שבועות"},{v:"daytrading",l:"Day Trading",d:"תוך יומי"},{v:"position",l:"Position Trading",d:"שבועות–חודשים"}].map(({v,l,d})=>(
         <div key={v} className="btn" onClick={()=>u("style",v)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:p.style===v?"#a78bfa15":"#060608",border:`1px solid ${p.style===v?"#a78bfa50":"#1a1a2e"}`,borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:"pointer"}}>
-          <div><div style={{color:p.style===v?"#a78bfa":"#ccc",fontWeight:600,fontSize:14}}>{l}</div><div style={{color:"#444",fontSize:11,marginTop:2}}>{d}</div></div>
+          <div><div style={{color:p.style===v?"#a78bfa":"#ccc",fontWeight:600,fontSize:14}}>{l}</div><div style={{color:"#999",fontSize:13,marginTop:2}}>{d}</div></div>
           {p.style===v&&<span style={{color:"#a78bfa",fontSize:18}}>✓</span>}
         </div>
       ))}
@@ -431,7 +433,7 @@ function TraderProfile({profile,onSave,onClose}){
     <Section title="ניסיון">
       {[{v:"beginner",l:"מתחיל",d:"פחות משנה"},{v:"intermediate",l:"מתקדם",d:"1–3 שנים"},{v:"advanced",l:"מקצועי",d:"3+ שנים"}].map(({v,l,d})=>(
         <div key={v} className="btn" onClick={()=>u("experience",v)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:p.experience===v?"#a78bfa15":"#060608",border:`1px solid ${p.experience===v?"#a78bfa50":"#1a1a2e"}`,borderRadius:12,padding:"12px 14px",marginBottom:8,cursor:"pointer"}}>
-          <div><div style={{color:p.experience===v?"#a78bfa":"#ccc",fontWeight:600,fontSize:14}}>{l}</div><div style={{color:"#444",fontSize:11,marginTop:2}}>{d}</div></div>
+          <div><div style={{color:p.experience===v?"#a78bfa":"#ccc",fontWeight:600,fontSize:14}}>{l}</div><div style={{color:"#999",fontSize:13,marginTop:2}}>{d}</div></div>
           {p.experience===v&&<span style={{color:"#a78bfa",fontSize:18}}>✓</span>}
         </div>
       ))}
@@ -464,12 +466,12 @@ function PositionSizer({profile,stock,onClose}){
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
         {[{l:"מחיר כניסה ($)",k:"entry",val:entry,set:setEntry},{l:"סטופ לוס ($)",k:"stop",val:stop,set:setStop},{l:"יעד ($)",k:"target",val:target,set:setTarget}].map(({l,val,set})=>(
           <div key={l}>
-            <div style={{color:"#555",fontSize:11,marginBottom:5}}>{l}</div>
+            <div style={{color:"#555",fontSize:13,marginBottom:5}}>{l}</div>
             <input type="number" value={val} onChange={e=>set(parseFloat(e.target.value)||0)} style={{width:"100%",background:"#060608",border:"1px solid #2a2a3e",borderRadius:10,color:"#fff",fontSize:16,padding:"10px 12px",fontFamily:"'IBM Plex Mono',monospace",outline:"none",textAlign:"center"}}/>
           </div>
         ))}
         <div>
-          <div style={{color:"#555",fontSize:11,marginBottom:5}}>סימבול</div>
+          <div style={{color:"#555",fontSize:13,marginBottom:5}}>סימבול</div>
           <input value={sym} onChange={e=>setSym(e.target.value.toUpperCase())} placeholder="TSLA" style={{width:"100%",background:"#060608",border:"1px solid #2a2a3e",borderRadius:10,color:"#fff",fontSize:16,padding:"10px 12px",fontFamily:"'IBM Plex Mono',monospace",outline:"none",textAlign:"center",direction:"ltr"}}/>
         </div>
       </div>
@@ -491,7 +493,7 @@ function PositionSizer({profile,stock,onClose}){
 
     {/* Risk meter */}
     <Section title="מד סיכון">
-      {parseFloat(pctOfPort)>20&&<div style={{background:"#ff6b6b15",border:"1px solid #ff6b6b30",borderRadius:10,padding:"10px 14px",marginBottom:10,color:"#ff6b6b",fontSize:13}}>⚠️ פוזיציה גדולה מדי — {pctOfPort}% מהתיק. מומלץ מתחת ל-20%.</div>}
+      {parseFloat(pctOfPort)>20&&<div style={{background:"#ff6b6b15",border:"1px solid #ff6b6b30",borderRadius:10,padding:"10px 14px",marginBottom:10,color:"#ff6b6b",fontSize:13}}>⚠️ פוזיציה גדולה מדי — {pctOfPort}% מהתיק. הנתונים מציגים סיכון מעל 20%.</div>}
       {!rrOk&&<div style={{background:"#ffd93d15",border:"1px solid #ffd93d30",borderRadius:10,padding:"10px 14px",color:"#ffd93d",fontSize:13}}>⚠️ R:R מתחת ל-2:1 — סיכון גבוה ביחס לתשואה.</div>}
       {rrOk&&parseFloat(pctOfPort)<=20&&<div style={{background:"#00ff8715",border:"1px solid #00ff8730",borderRadius:10,padding:"10px 14px",color:"#00ff87",fontSize:13}}>✅ עסקה כשירה — גודל סביר, R:R טוב.</div>}
     </Section>
@@ -505,7 +507,7 @@ function PositionSizer({profile,stock,onClose}){
       ].map(({pct,at,action},i)=>(
         <div key={i} style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
           <div style={{width:40,height:40,borderRadius:"50%",background:"#1a1a2e",display:"flex",alignItems:"center",justifyContent:"center",color:"#00ff87",fontSize:12,fontWeight:700,flexShrink:0}}>{pct}</div>
-          <div><div style={{color:"#ccc",fontSize:13,fontWeight:600}}>{at}</div><div style={{color:"#555",fontSize:11,marginTop:2}}>{action}</div></div>
+          <div><div style={{color:"#ccc",fontSize:13,fontWeight:600}}>{at}</div><div style={{color:"#555",fontSize:13,marginTop:2}}>{action}</div></div>
         </div>
       ))}
     </Section>
@@ -535,7 +537,7 @@ function CircuitBreaker({profile,todayPnl,tradeCount,lastTradeTime,locked,onUnlo
           <div style={{color:"#555",fontSize:12,marginTop:4}}>הפסד היום</div>
         </div>
         <div style={{color:"#555",fontSize:13,marginBottom:20}}>💡 קח הפסקה, בדוק מה קרה, חזור מחר רענן.</div>
-        <button className="btn" onClick={onUnlock} style={{background:"#1a1a2e",border:"1px solid #333",borderRadius:12,color:"#888",padding:"12px 24px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>ביטול ידני (לא מומלץ)</button>
+        <button className="btn" onClick={onUnlock} style={{background:"#1a1a2e",border:"1px solid #333",borderRadius:12,color:"#888",padding:"12px 24px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>ביטול ידני (לא מציג נתונים חיוביים)</button>
       </div>
     ):(
       <>
@@ -554,7 +556,7 @@ function CircuitBreaker({profile,todayPnl,tradeCount,lastTradeTime,locked,onUnlo
           <div style={{height:10,background:"#1a1a2e",borderRadius:5,overflow:"hidden",marginBottom:8}}>
             <div style={{width:`${lossPercent}%`,height:"100%",borderRadius:5,transition:"width .8s ease",background:lossPercent>70?"#ff6b6b":lossPercent>40?"#ffd93d":"#00ff87"}}/>
           </div>
-          <div style={{color:"#444",fontSize:11}}>{lossPercent.toFixed(0)}% מהמגבלה היומית ({profile?.maxDailyLoss||3}% מהתיק)</div>
+          <div style={{color:"#999",fontSize:13}}>{lossPercent.toFixed(0)}% מהמגבלה היומית ({profile?.maxDailyLoss||3}% מהתיק)</div>
         </Section>
 
         <Section title="מד עסקאות יום">
@@ -579,7 +581,7 @@ function CircuitBreaker({profile,todayPnl,tradeCount,lastTradeTime,locked,onUnlo
               <span style={{fontSize:20}}>{icon}</span>
               <div style={{flex:1}}>
                 <div style={{color:"#ccc",fontSize:13,fontWeight:600}}>{title}</div>
-                <div style={{color:"#444",fontSize:11,marginTop:2}}>{desc}</div>
+                <div style={{color:"#999",fontSize:13,marginTop:2}}>{desc}</div>
               </div>
               <div style={{width:24,height:14,borderRadius:7,background:active?"#00ff87":"#333",position:"relative",flexShrink:0}}>
                 <div style={{width:10,height:10,borderRadius:"50%",background:"#fff",position:"absolute",top:2,right:active?2:12,transition:"right .2s"}}/>
@@ -597,12 +599,14 @@ function CircuitBreaker({profile,todayPnl,tradeCount,lastTradeTime,locked,onUnlo
 // ══════════════════════════════════════════════════════════════════════
 function JournalAnalytics({onClose}){
   const [view,setView]=useState("stats"); // stats | trades | add
-  const [trades]=useState(SAMPLE_TRADES);
+  const [trades,setTrades]=useState([]);
+  const [tradesLoading,setTradesLoading]=useState(true);
   const [newTrade,setNewTrade]=useState({symbol:"",entry:"",exit:"",stop:"",qty:"",setup:"RSI Bounce",emotion:"focused",followedPlan:true,notes:""});
+  useEffect(()=>{apiCall('/api/trades').then(r=>r.json()).then(d=>{setTrades((Array.isArray(d)?d:[]).map(normalizeTrade));setTradesLoading(false);}).catch(()=>setTradesLoading(false));},[]);
 
   const wins=trades.filter(t=>t.result==="win");
   const losses=trades.filter(t=>t.result==="loss");
-  const winRate=Math.round((wins.length/trades.length)*100);
+  const winRate=Math.round((wins.length/Math.max(trades.length,1))*100);
   const totalPnl=trades.reduce((a,t)=>a+t.pnl,0);
   const avgWin=wins.length?Math.round(wins.reduce((a,t)=>a+t.pnl,0)/wins.length):0;
   const avgLoss=losses.length?Math.round(losses.reduce((a,t)=>a+Math.abs(t.pnl),0)/losses.length):0;
@@ -644,11 +648,11 @@ function JournalAnalytics({onClose}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div style={{background:"#00ff8712",border:"1px solid #00ff8730",borderRadius:12,padding:"14px",textAlign:"center"}}>
               <div style={{color:"#00ff87",fontSize:28,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{planWinRate}%</div>
-              <div style={{color:"#555",fontSize:11,marginTop:4}}>כשעקבתי לתוכנית</div>
+              <div style={{color:"#555",fontSize:13,marginTop:4}}>כשעקבתי לתוכנית</div>
             </div>
             <div style={{background:"#ff6b6b12",border:"1px solid #ff6b6b30",borderRadius:12,padding:"14px",textAlign:"center"}}>
               <div style={{color:"#ff6b6b",fontSize:28,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{noplanWinRate}%</div>
-              <div style={{color:"#555",fontSize:11,marginTop:4}}>כשסטיתי מהתוכנית</div>
+              <div style={{color:"#555",fontSize:13,marginTop:4}}>כשסטיתי מהתוכנית</div>
             </div>
           </div>
           <div style={{color:"#555",fontSize:12,marginTop:10,textAlign:"center",lineHeight:1.6}}>
@@ -695,14 +699,14 @@ function JournalAnalytics({onClose}){
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <span style={{color:"#fff",fontWeight:700,fontSize:16,fontFamily:"'IBM Plex Mono',monospace"}}>{t.symbol}</span>
-                  <span style={{background:t.result==="win"?"#00ff8720":"#ff6b6b20",color:t.result==="win"?"#00ff87":"#ff6b6b",fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:700}}>{t.result==="win"?"רווח":"הפסד"}</span>
-                  {!t.followedPlan&&<span style={{background:"#ffd93d20",color:"#ffd93d",fontSize:10,padding:"2px 7px",borderRadius:20}}>סטה מתוכנית</span>}
+                  <span style={{background:t.result==="win"?"#00ff8720":"#ff6b6b20",color:t.result==="win"?"#00ff87":"#ff6b6b",fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700}}>{t.result==="win"?"רווח":"הפסד"}</span>
+                  {!t.followedPlan&&<span style={{background:"#ffd93d20",color:"#ffd93d",fontSize:13,padding:"2px 7px",borderRadius:20}}>סטה מתוכנית</span>}
                 </div>
-                <div style={{color:"#444",fontSize:11,marginTop:3}}>{t.date} · {t.day} · {t.hour}</div>
+                <div style={{color:"#999",fontSize:13,marginTop:3}}>{t.date} · {t.day} · {t.hour}</div>
               </div>
               <div style={{color:t.pnl>=0?"#00ff87":"#ff6b6b",fontSize:17,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{t.pnl>=0?"+":""}${t.pnl}</div>
             </div>
-            <div style={{display:"flex",gap:16,color:"#555",fontSize:11}}>
+            <div style={{display:"flex",gap:16,color:"#555",fontSize:13}}>
               <span>כניסה ${t.entry}</span><span>יציאה ${t.exit}</span><span>כמות {t.qty}</span><span>{t.setup}</span>
             </div>
             {t.notes&&<div style={{color:"#666",fontSize:12,marginTop:8,fontStyle:"italic"}}>"{t.notes}"</div>}
@@ -745,7 +749,12 @@ function JournalAnalytics({onClose}){
             </div>
           </div>
           <textarea value={newTrade.notes} onChange={e=>setNewTrade(p=>({...p,notes:e.target.value}))} placeholder="הערות על העסקה..." style={{width:"100%",background:"#060608",border:"1px solid #2a2a3e",borderRadius:10,color:"#fff",fontSize:13,padding:"12px",fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl",resize:"none",minHeight:70,marginBottom:16}}/>
-          <PrimaryBtn label="שמור עסקה ✓" onClick={()=>setView("trades")} color="linear-gradient(135deg,#ffd93d,#ffaa00)" textColor="#000"/>
+          <PrimaryBtn label="שמור עסקה ✓" onClick={async()=>{
+            if(!newTrade.symbol||!newTrade.entry)return;
+            const pnl=((parseFloat(newTrade.exit)||0)-(parseFloat(newTrade.entry)||0))*(parseFloat(newTrade.qty)||0);
+            const body={symbol:newTrade.symbol.toUpperCase(),entry:parseFloat(newTrade.entry),exit:parseFloat(newTrade.exit)||null,stop:parseFloat(newTrade.stop)||null,qty:parseFloat(newTrade.qty)||1,date:new Date().toISOString().split('T')[0],setup:newTrade.setup,emotion:newTrade.emotion,followed_plan:newTrade.followedPlan,notes:newTrade.notes,pnl:parseFloat(pnl.toFixed(2)),result:pnl>=0?'win':'loss'};
+            try{const r=await apiCall('/api/trades',{method:'POST',body:JSON.stringify(body)});const d=await r.json();if(d.id){setTrades(p=>[normalizeTrade(d),...p]);setNewTrade({symbol:'',entry:'',exit:'',stop:'',qty:'',setup:'RSI Bounce',emotion:'focused',followedPlan:true,notes:''});setView('trades');}}catch{}
+          }} color="linear-gradient(135deg,#ffd93d,#ffaa00)" textColor="#000"/>
         </Section>
       </div>
     )}
@@ -756,19 +765,26 @@ function JournalAnalytics({onClose}){
 // 5. OPEN POSITIONS
 // ══════════════════════════════════════════════════════════════════════
 function OpenPositions({profile,onClose}){
-  const [positions,setPositions]=useState([
-    {id:1,symbol:"TSLA",name:"Tesla",entry:245,current:267,stop:232,target:285,qty:10,date:"2026-04-14"},
-    {id:2,symbol:"PLTR",name:"Palantir",entry:88,current:91,stop:80,target:110,qty:20,date:"2026-04-15"},
-    {id:3,symbol:"NVDA",name:"Nvidia",entry:890,current:856,stop:875,target:960,qty:5,date:"2026-04-16"},
-  ]);
+  const [positions,setPositions]=useState([]);
+  const [posLoading,setPosLoading]=useState(true);
   const [adding,setAdding]=useState(false);
   const [np,setNp]=useState({symbol:"",entry:"",stop:"",target:"",qty:""});
 
-  const addPosition=()=>{
+  useEffect(()=>{
+    apiCall('/api/positions').then(r=>r.json()).then(d=>{
+      setPositions(Array.isArray(d)?d.map(p=>({...p,entry:parseFloat(p.entry)||0,current:parseFloat(p.current||p.entry)||0,stop:parseFloat(p.stop)||0,target:parseFloat(p.target)||0,qty:parseFloat(p.qty)||0})):[]);
+      setPosLoading(false);
+    }).catch(()=>setPosLoading(false));
+  },[]);
+
+  const addPosition=async()=>{
     if(!np.symbol||!np.entry)return;
-    const stock=ALL_STOCKS.find(s=>s.symbol===np.symbol.toUpperCase());
-    setPositions(p=>[...p,{id:Date.now(),symbol:np.symbol.toUpperCase(),name:stock?.name||np.symbol,entry:parseFloat(np.entry),current:parseFloat(np.entry)*(1+(Math.random()-.4)*.05),stop:parseFloat(np.stop),target:parseFloat(np.target),qty:parseInt(np.qty),date:new Date().toISOString().split("T")[0]}]);
-    setNp({symbol:"",entry:"",stop:"",target:"",qty:""});setAdding(false);
+    const body={symbol:np.symbol.toUpperCase(),entry:parseFloat(np.entry),stop:parseFloat(np.stop)||null,target:parseFloat(np.target)||null,qty:parseFloat(np.qty)||1,current:parseFloat(np.entry)};
+    try{const r=await apiCall('/api/positions',{method:'POST',body:JSON.stringify(body)});const d=await r.json();if(d.id){setPositions(p=>[...p,{...d,entry:parseFloat(d.entry)||0,current:parseFloat(d.current||d.entry)||0,stop:parseFloat(d.stop)||0,target:parseFloat(d.target)||0,qty:parseFloat(d.qty)||0}]);setNp({symbol:'',entry:'',stop:'',target:'',qty:''});setAdding(false);}}catch{}
+  };
+
+  const deletePosition=async(id)=>{
+    try{await apiCall(`/api/positions/${id}`,{method:'DELETE'});setPositions(p=>p.filter(x=>x.id!==id));}catch{}
   };
 
   const totalPnl=positions.reduce((a,p)=>{const pnl=(p.current-p.entry)*p.qty;return a+pnl;},0);
@@ -790,7 +806,7 @@ function OpenPositions({profile,onClose}){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
           {[{l:"סימבול",k:"symbol",pl:"TSLA"},{l:"כניסה $",k:"entry",pl:"245"},{l:"סטופ $",k:"stop",pl:"232"},{l:"יעד $",k:"target",pl:"285"},{l:"כמות",k:"qty",pl:"10"}].map(({l,k,pl})=>(
             <div key={k}>
-              <div style={{color:"#555",fontSize:11,marginBottom:5}}>{l}</div>
+              <div style={{color:"#555",fontSize:13,marginBottom:5}}>{l}</div>
               <input value={np[k]} onChange={e=>setNp(p=>({...p,[k]:e.target.value}))} placeholder={pl} style={{width:"100%",background:"#060608",border:"1px solid #2a2a3e",borderRadius:10,color:"#fff",fontSize:15,padding:"9px 12px",fontFamily:"'IBM Plex Mono',monospace",outline:"none",textAlign:"center"}}/>
             </div>
           ))}
@@ -812,27 +828,28 @@ function OpenPositions({profile,onClose}){
             <div>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
                 <span style={{color:"#fff",fontSize:18,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{pos.symbol}</span>
-                {atRisk&&<span style={{background:"#ff6b6b20",color:"#ff6b6b",fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,animation:"pulse 1.5s infinite"}}>⚠️ קרוב לסטופ</span>}
-                {nearTarget&&<span style={{background:"#00ff8720",color:"#00ff87",fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,animation:"pulse 1.5s infinite"}}>🎯 קרוב ליעד</span>}
+                {atRisk&&<span style={{background:"#ff6b6b20",color:"#ff6b6b",fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,animation:"pulse 1.5s infinite"}}>⚠️ קרוב לסטופ</span>}
+                {nearTarget&&<span style={{background:"#00ff8720",color:"#00ff87",fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,animation:"pulse 1.5s infinite"}}>🎯 קרוב ליעד</span>}
               </div>
-              <div style={{color:"#444",fontSize:11,marginTop:2}}>{pos.qty} מניות · כניסה ${pos.entry} · {pos.date}</div>
+              <div style={{color:"#999",fontSize:13,marginTop:2}}>{pos.qty} מניות · כניסה ${pos.entry} · {pos.date}</div>
             </div>
-            <div style={{textAlign:"left"}}>
+            <div style={{textAlign:"left",display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
               <div style={{color:pnl>=0?"#00ff87":"#ff6b6b",fontSize:18,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{pnl>=0?"+":""}${pnl.toFixed(0)}</div>
-              <div style={{color:pnl>=0?"#00ff87":"#ff6b6b",fontSize:12,textAlign:"right"}}>{pnlPct>=0?"+":""}{pnlPct.toFixed(2)}%</div>
+              <div style={{color:pnl>=0?"#00ff87":"#ff6b6b",fontSize:12}}>{pnlPct>=0?"+":""}{pnlPct.toFixed(2)}%</div>
+              <button onClick={()=>deletePosition(pos.id)} style={{background:"#ff6b6b15",border:"1px solid #ff6b6b30",borderRadius:6,color:"#ff6b6b",fontSize:11,padding:"3px 8px",cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>מחק</button>
             </div>
           </div>
 
           {/* Progress bars */}
           <div style={{marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#444",marginBottom:5}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#999",marginBottom:5}}>
               <span>סטופ ${pos.stop}</span><span>כניסה ${pos.entry}</span><span>יעד ${pos.target}</span>
             </div>
             <div style={{height:6,background:"#1a1a2e",borderRadius:3,position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",left:0,top:0,bottom:0,borderRadius:3,width:`${Math.max(0,Math.min(100,((pos.current-pos.stop)/(pos.target-pos.stop))*100))}%`,background:`linear-gradient(90deg,#ff6b6b,#ffd93d,#00ff87)`,transition:"width .8s ease"}}/>
               <div style={{position:"absolute",top:"50%",transform:"translateY(-50%)",left:`${Math.max(0,Math.min(97,((pos.current-pos.stop)/(pos.target-pos.stop))*100))}%`,width:10,height:10,borderRadius:"50%",background:"#fff",border:"2px solid #000"}}/>
             </div>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#333",marginTop:4}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#888",marginTop:4}}>
               <span>כניסה ל-יעד: {Math.max(0,100-toTarget).toFixed(0)}%</span>
               <span>מחיר: ${pos.current}</span>
             </div>
@@ -842,7 +859,7 @@ function OpenPositions({profile,onClose}){
             {[{l:"לסטופ",v:`${toStop.toFixed(0)}%`,c:"#ff6b6b"},{l:"ליעד",v:`${Math.max(0,100-toTarget).toFixed(0)}%`,c:"#00ff87"},{l:"R:R נוכחי",v:`${Math.max(0,((pos.target-pos.current)/(pos.current-pos.stop))).toFixed(1)}:1`,c:"#ffd93d"}].map(({l,v,c})=>(
               <div key={l} style={{background:"#060608",borderRadius:10,padding:"8px",textAlign:"center"}}>
                 <div style={{color:c,fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div>
-                <div style={{color:"#333",fontSize:10,marginTop:2}}>{l}</div>
+                <div style={{color:"#888",fontSize:13,marginTop:2}}>{l}</div>
               </div>
             ))}
           </div>
@@ -857,7 +874,7 @@ function OpenPositions({profile,onClose}){
 // ══════════════════════════════════════════════════════════════════════
 // Beginner tooltips for key terms
 const BEGINNER_TIPS={
-  RSI:"RSI מעל 70 = קנוי יתר (אות מכירה). מתחת ל-30 = מכור יתר (אות קנייה).",
+  RSI:"RSI מעל 70 = קנוי יתר (נתון שלילי). מתחת ל-30 = מכור יתר (נתון חיובי).",
   שינוי:"שינוי האחוז של המניה ביום המסחר הנוכחי.",
   ציון:"ציון כולל מ-0 עד 100 — מחשב טכני + פונדמנטלי + סנטימנט.",
   "R:R":"יחס תגמול/סיכון. R:R של 2 = על כל $1 סיכון יש פוטנציאל של $2 רווח.",
@@ -868,35 +885,47 @@ const BEGINNER_TIPS={
 
 function BeginnerTip({text}){
   return(
-    <div style={{background:"#ffd93d10",border:"1px solid #ffd93d25",borderRadius:8,padding:"6px 10px",fontSize:11,color:"#ffd93d",marginBottom:8,display:"flex",gap:6,alignItems:"flex-start"}}>
+    <div style={{background:"#ffd93d10",border:"1px solid #ffd93d25",borderRadius:8,padding:"6px 10px",fontSize:13,color:"#ffd93d",marginBottom:8,display:"flex",gap:6,alignItems:"flex-start"}}>
       <span style={{flexShrink:0}}>💡</span><span>{text}</span>
     </div>
   );
 }
 
-function Scanner({experience="intermediate"}){
+function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
   const [sel,setSel]=useState(null);
   const [filter,setFilter]=useState("הכל");
   const [sort,setSort]=useState("score");
+  const [watchlist,setWatchlist]=useState(new Set());
+  useEffect(()=>{apiCall('/api/watchlist').then(r=>r.json()).then(d=>{if(Array.isArray(d))setWatchlist(new Set(d.map(w=>w.symbol)));}).catch(()=>{});},[]);
+  const toggleWatch=async(sym,e)=>{e.stopPropagation();if(watchlist.has(sym)){await apiCall(`/api/watchlist/${sym}`,{method:'DELETE'}).catch(()=>{});setWatchlist(p=>{const n=new Set(p);n.delete(sym);return n;});}else{await apiCall('/api/watchlist',{method:'POST',body:JSON.stringify({symbol:sym})}).catch(()=>{});setWatchlist(p=>new Set([...p,sym]));}};
   const isBegin=experience==="beginner";
   const isPro=experience==="professional";
-  const filtered=ALL_STOCKS.filter(s=>filter==="הכל"||s.sig===filter).sort((a,b)=>sort==="score"?b.total-a.total:sort==="change"?b.change-a.change:a.rsi-b.rsi);
+  const q=searchQuery.trim().toUpperCase();
+  const filtered=ALL_STOCKS
+    .filter(s=>q?(s.symbol.includes(q)||s.name.toUpperCase().includes(q)):(filter==="הכל"||s.sig===filter))
+    .sort((a,b)=>sort==="score"?b.total-a.total:sort==="change"?b.change-a.change:a.rsi-b.rsi);
   return(
     <>
-      {isBegin&&<div style={{padding:"8px 20px 0"}}><BeginnerTip text="לחץ על מניה לפרטים. ה'ציון' מסכם את כל הניתוחים — מעל 70 זו הזדמנות קנייה פוטנציאלית."/></div>}
+      {isBegin&&<div style={{padding:"8px 20px 0"}}><BeginnerTip text="לחץ על מניה לפרטים. ה'ציון' מסכם את כל הניתוחים — מעל 70 זו נתונים חיוביים פוטנציאליים."/></div>}
       <div style={{padding:"10px 20px 0",overflowX:"auto",display:"flex",gap:8,paddingBottom:4,flexShrink:0}}>
-        {["הכל","קנייה חזקה","קנייה","המתנה","מכירה"].map(f=>(
+        {["הכל","סיגנל חיובי חזק","סיגנל חיובי","המתנה","סיגנל שלילי"].map(f=>(
           <button key={f} className="btn" onClick={()=>setFilter(f)} style={{background:filter===f?"#00ff8720":"#0d0d18",border:`1px solid ${filter===f?"#00ff8760":"#1a1a2e"}`,borderRadius:20,color:filter===f?"#00ff87":"#555",padding:"6px 14px",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif"}}>{f}</button>
         ))}
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 62px 52px",gap:6,padding:"10px 20px 6px",color:"#333",fontSize:10,letterSpacing:.5,flexShrink:0}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 62px 52px",gap:6,padding:"10px 20px 6px",color:"#888",fontSize:13,letterSpacing:.5,flexShrink:0}}>
         <div>מניה</div><div style={{textAlign:"center"}}>RSI</div><div style={{textAlign:"right"}}>שינוי</div><div style={{textAlign:"center"}}>גרף</div><div style={{textAlign:"center"}}>ציון</div>
       </div>
-      <div style={{flex:1,overflowY:"auto",padding:"0 12px 20px"}}>
+      {q&&filtered.length===1&&onAnalyze&&(
+        <div style={{margin:"6px 12px 0",display:"flex",justifyContent:"flex-end"}}>
+          <button onClick={()=>onAnalyze(filtered[0].symbol)} style={{background:"#a78bfa20",border:"1px solid #a78bfa40",borderRadius:10,color:"#a78bfa",fontSize:13,padding:"7px 14px",cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>ניתוח מלא 🔍</button>
+        </div>
+      )}
+      <div style={{padding:"0 12px 20px"}}>
         {filtered.map((s,i)=>(
           <div key={s.symbol} className="row" onClick={()=>setSel(s===sel?null:s)} style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 62px 52px",gap:6,padding:"10px 8px",borderRadius:12,background:sel?.symbol===s.symbol?"#111120":"transparent",marginBottom:2,alignItems:"center",animation:`fadeUp .3s ease ${i*.02}s both`,cursor:"pointer"}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                <button onClick={e=>toggleWatch(s.symbol,e)} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",padding:"0 1px",color:watchlist.has(s.symbol)?"#ffd93d":"#2a2a3e",lineHeight:1,flexShrink:0}}>{watchlist.has(s.symbol)?"⭐":"☆"}</button>
                 <span style={{color:"#fff",fontWeight:700,fontSize:14,fontFamily:"'IBM Plex Mono',monospace"}}>{s.symbol}</span>
                 <Badge sig={s.sig} sb={s.sb} sc={s.sc} sm/>
               </div>
@@ -922,23 +951,23 @@ function Scanner({experience="intermediate"}){
           </div>
           <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
             <Section><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:"#fff",fontSize:32,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>${sel.price}</div><div style={{color:sel.change>=0?"#00ff87":"#ff6b6b",fontSize:16,fontWeight:600}}>{sel.change>=0?"+":""}{sel.change}%</div></div><Spark data={sel.spark} color={sel.change>=0?"#00ff87":"#ff6b6b"} w={100} h={44}/></div></Section>
-            {isBegin&&<BeginnerTip text={`RSI ${sel.rsi} — ${sel.rsi<30?"מכור יתר, הזדמנות קנייה פוטנציאלית":sel.rsi>70?"קנוי יתר, זהירות":sel.rsi>50?"מגמה עולה, המתן לאישור":"מגמה יורדת, זהירות"}. יעד: $${sel.target} | סטופ: $${sel.stop}`}/>}
+            {isBegin&&<BeginnerTip text={`RSI ${sel.rsi} — ${sel.rsi<30?"מכור יתר, נתונים חיוביים פוטנציאליים":sel.rsi>70?"קנוי יתר, זהירות":sel.rsi>50?"מגמה עולה, המתן לאישור":"מגמה יורדת, זהירות"}. יעד: $${sel.target} | סטופ: $${sel.stop}`}/>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               {[{l:"יעד",v:`$${sel.target}`,c:"#00ff87"},{l:"סטופ",v:`$${sel.stop}`,c:"#ff6b6b"},{l:"R:R",v:`${sel.rr}:1`,c:sel.rr>=2?"#00ff87":"#ffd93d"},{l:"RSI",v:sel.rsi,c:sel.rsi<30?"#00ff87":sel.rsi>70?"#ff6b6b":"#ffd93d"}].map(({l,v,c})=>(
                 <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}>
-                  <div style={{color:"#444",fontSize:11,marginBottom:4}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div>
+                  <div style={{color:"#999",fontSize:13,marginBottom:4}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div>
                   <div style={{color:c,fontSize:18,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div>
-                  {isBegin&&l==="R:R"&&<div style={{color:"#333",fontSize:10,marginTop:3}}>יחס תגמול/סיכון</div>}
+                  {isBegin&&l==="R:R"&&<div style={{color:"#888",fontSize:13,marginTop:3}}>יחס תגמול/סיכון</div>}
                 </div>
               ))}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-              {[{l:"טכני",v:sel.tech},{l:"פונדמנטלי",v:sel.fund},{l:"סנטימנט",v:sel.sent}].map(({l,v})=>{const c=v>=65?"#00ff87":v>=45?"#ffd93d":"#ff6b6b";return(<div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#444",fontSize:11,marginBottom:6}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div><div style={{color:c,fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",marginBottom:6}}>{v}</div><div style={{height:3,background:"#1a1a2e",borderRadius:2}}><div style={{width:`${v}%`,height:"100%",background:c,borderRadius:2}}/></div></div>);})}
+              {[{l:"טכני",v:sel.tech},{l:"פונדמנטלי",v:sel.fund},{l:"סנטימנט",v:sel.sent}].map(({l,v})=>{const c=v>=65?"#00ff87":v>=45?"#ffd93d":"#ff6b6b";return(<div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#999",fontSize:13,marginBottom:6}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div><div style={{color:c,fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",marginBottom:6}}>{v}</div><div style={{height:3,background:"#1a1a2e",borderRadius:2}}><div style={{width:`${v}%`,height:"100%",background:c,borderRadius:2}}/></div></div>);})}
             </div>
             {isPro&&(
               <div style={{marginTop:10,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 {[{l:"MACD",v:sel.macd,c:sel.macd>=0?"#00ff87":"#ff6b6b"},{l:"EMA20",v:`$${sel.ema20}`,c:sel.price>sel.ema20?"#00ff87":"#ff6b6b"},{l:"EMA50",v:`$${sel.ema50}`,c:sel.price>sel.ema50?"#00ff87":"#ff6b6b"}].map(({l,v,c})=>(
-                  <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#444",fontSize:11,marginBottom:4}}>{l}</div><div style={{color:c,fontSize:14,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div></div>
+                  <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#999",fontSize:13,marginBottom:4}}>{l}</div><div style={{color:c,fontSize:14,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div></div>
                 ))}
               </div>
             )}
@@ -953,7 +982,7 @@ function Scanner({experience="intermediate"}){
 // AI COACH
 // ══════════════════════════════════════════════════════════════════════
 function AICoach({profile,onClose}){
-  const [msgs,setMsgs]=useState([{r:"ai",t:`שלום ${profile?.name||"סוחר"}! אני ה-AI Coach שלך. שאל אותי כל שאלה על מסחר, ניתוח, או מנטליות.`}]);
+  const [msgs,setMsgs]=useState([{r:"ai",t:`שלום ${profile?.name||"סוחר"}! אני ה-סיכום נתונים AI שלך. שאל אותי כל שאלה על מסחר, ניתוח, או מנטליות.`}]);
   const [inp,setInp]=useState("");const [load,setLoad]=useState(false);const ref=useRef(null);
   useEffect(()=>{ref.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
   const send=async()=>{
@@ -967,7 +996,7 @@ function AICoach({profile,onClose}){
     }catch{setMsgs(p=>[...p,{r:"ai",t:"שגיאת חיבור."}]);}
     setLoad(false);
   };
-  return <Screen title="🤖 AI Coach" onBack={onClose} accent="#a78bfa">
+  return <Screen title="🤖 סיכום נתונים AI" onBack={onClose} accent="#a78bfa">
     <div style={{display:"flex",flexDirection:"column",gap:10,paddingBottom:80}}>
       {msgs.map((m,i)=>(
         <div key={i} style={{display:"flex",justifyContent:m.r==="user"?"flex-start":"flex-end",animation:"fadeUp .3s ease"}}>
@@ -980,11 +1009,11 @@ function AICoach({profile,onClose}){
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#060608",borderTop:"1px solid #1a1a2e",padding:"10px 20px 24px"}}>
       <div style={{display:"flex",gap:8,marginBottom:8,overflowX:"auto"}}>
         {["מה RSI אומר?","איך מגדיר סטופ?","יש לי FOMO","Position Sizing"].map(q=>(
-          <button key={q} className="btn" onClick={()=>setInp(q)} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:20,color:"#666",fontSize:11,padding:"5px 12px",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif"}}>{q}</button>
+          <button key={q} className="btn" onClick={()=>setInp(q)} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:20,color:"#666",fontSize:13,padding:"5px 12px",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif"}}>{q}</button>
         ))}
       </div>
       <div style={{display:"flex",gap:10}}>
-        <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="שאל את ה-Coach..." style={{flex:1,background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,color:"#fff",fontSize:14,padding:"12px 14px",fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl"}}/>
+        <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="שאל את סיכום נתונים AI..." style={{flex:1,background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,color:"#fff",fontSize:14,padding:"12px 14px",fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl"}}/>
         <button className="btn" onClick={send} style={{width:46,height:46,background:"linear-gradient(135deg,#a78bfa,#7c3aed)",border:"none",borderRadius:12,color:"#fff",fontSize:20,cursor:"pointer",flexShrink:0}}>↑</button>
       </div>
     </div>
@@ -1014,7 +1043,7 @@ function GlossaryScreen({onClose}){
           placeholder="חפש מושג..."
           style={{width:"100%",background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,color:"#fff",fontSize:14,padding:"11px 14px 11px 38px",fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl"}}
         />
-        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#444",fontSize:15,pointerEvents:"none"}}>🔍</span>
+        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#999",fontSize:15,pointerEvents:"none"}}>🔍</span>
       </div>
 
       {/* category pills */}
@@ -1023,7 +1052,7 @@ function GlossaryScreen({onClose}){
           const cc=CAT_COLOR[c]||"#a78bfa";
           const active=catFilter===c;
           return(
-            <button key={c} className="btn" onClick={()=>{setCatFilter(c);setOpen(null);}} style={{background:active?cc+"22":"#0d0d18",border:`1px solid ${active?cc+"55":"#1a1a2e"}`,borderRadius:20,color:active?cc:"#555",padding:"4px 13px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400}}>
+            <button key={c} className="btn" onClick={()=>{setCatFilter(c);setOpen(null);}} style={{background:active?cc+"22":"#0d0d18",border:`1px solid ${active?cc+"55":"#1a1a2e"}`,borderRadius:20,color:active?cc:"#555",padding:"4px 13px",fontSize:13,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400}}>
               {c}
             </button>
           );
@@ -1031,7 +1060,7 @@ function GlossaryScreen({onClose}){
       </div>
 
       {filtered.length===0&&(
-        <div style={{textAlign:"center",padding:"48px 0",color:"#444",fontSize:14}}>לא נמצא מושג</div>
+        <div style={{textAlign:"center",padding:"48px 0",color:"#999",fontSize:14}}>לא נמצא מושג</div>
       )}
 
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -1046,9 +1075,9 @@ function GlossaryScreen({onClose}){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:isOpen?10:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
                   <span style={{color:"#fff",fontWeight:800,fontSize:17,fontFamily:"'IBM Plex Mono',monospace"}}>{g.term}</span>
-                  <span style={{background:cc+"22",color:cc,fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${cc+"44"}`,flexShrink:0}}>{g.cat}</span>
+                  <span style={{background:cc+"22",color:cc,fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${cc+"44"}`,flexShrink:0}}>{g.cat}</span>
                 </div>
-                <span style={{color:"#333",fontSize:13,flexShrink:0}}>{isOpen?"▲":"▼"}</span>
+                <span style={{color:"#888",fontSize:13,flexShrink:0}}>{isOpen?"▲":"▼"}</span>
               </div>
 
               {/* short description always visible */}
@@ -1058,7 +1087,7 @@ function GlossaryScreen({onClose}){
               {isOpen&&(
                 <div style={{animation:"fadeUp .2s ease"}}>
                   {g.full&&g.full!==g.term&&(
-                    <div style={{color:"#444",fontSize:10,marginBottom:10,fontFamily:"'IBM Plex Mono',monospace"}}>{g.full}</div>
+                    <div style={{color:"#999",fontSize:13,marginBottom:10,fontFamily:"'IBM Plex Mono',monospace"}}>{g.full}</div>
                   )}
                   <div style={{color:"#ccc",fontSize:13,lineHeight:1.8,marginBottom:12,borderTop:"1px solid #1a1a2e",paddingTop:10}}>{g.body}</div>
                   {g.examples&&(
@@ -1116,13 +1145,13 @@ function NewsScanner({onClose}){
       {/* market mood bar */}
       <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,padding:"12px 16px",marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <div style={{color:"#888",fontSize:11,fontWeight:600}}>מצב רוח השוק — {total} חדשות</div>
+          <div style={{color:"#888",fontSize:13,fontWeight:600}}>מצב רוח השוק — {total} חדשות</div>
           <div style={{color:moodPct>=55?"#00ff87":moodPct>=40?"#ffd93d":"#ff6b6b",fontWeight:700,fontSize:13,fontFamily:"'IBM Plex Mono',monospace"}}>{moodPct}% חיובי</div>
         </div>
         <div style={{height:6,background:"#1a1a2e",borderRadius:3,overflow:"hidden",marginBottom:8}}>
           <div style={{width:`${moodPct}%`,height:"100%",borderRadius:3,background:"linear-gradient(90deg,#ff6b6b,#ffd93d 40%,#00ff87)",transition:"width .8s ease"}}/>
         </div>
-        <div style={{display:"flex",gap:16,fontSize:11}}>
+        <div style={{display:"flex",gap:16,fontSize:13}}>
           <span style={{color:"#00ff87"}}>📈 {pos} חיובי</span>
           <span style={{color:"#ff6b6b"}}>📉 {neg} שלילי</span>
           <span style={{color:"#888"}}>➡️ {neu} ניטרלי</span>
@@ -1135,7 +1164,7 @@ function NewsScanner({onClose}){
           const m=Object.values(SENT_META).find(s=>s.label===f.id);
           const active=sentFilter===f.id;
           return(
-            <button key={f.id} className="btn" onClick={()=>setSentFilter(f.id)} style={{flex:1,background:active?(m?.bg||"#e879f918"):"#0d0d18",border:`1px solid ${active?(m?.border||"#e879f945"):"#1a1a2e"}`,borderRadius:10,color:active?(m?.color||"#e879f9"):"#555",padding:"7px 2px",fontSize:11,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400}}>
+            <button key={f.id} className="btn" onClick={()=>setSentFilter(f.id)} style={{flex:1,background:active?(m?.bg||"#e879f918"):"#0d0d18",border:`1px solid ${active?(m?.border||"#e879f945"):"#1a1a2e"}`,borderRadius:10,color:active?(m?.color||"#e879f9"):"#555",padding:"7px 2px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400}}>
               {f.l}
             </button>
           );
@@ -1145,7 +1174,7 @@ function NewsScanner({onClose}){
       {/* symbol filter horizontal scroll */}
       <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4,marginBottom:12}}>
         {symbols.map(s=>(
-          <button key={s} className="btn" onClick={()=>setSymFilter(s)} style={{background:symFilter===s?"#e879f918":"#0d0d18",border:`1px solid ${symFilter===s?"#e879f945":"#1a1a2e"}`,borderRadius:20,color:symFilter===s?"#e879f9":"#555",padding:"4px 12px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'IBM Plex Mono',monospace",fontWeight:symFilter===s?700:400}}>
+          <button key={s} className="btn" onClick={()=>setSymFilter(s)} style={{background:symFilter===s?"#e879f918":"#0d0d18",border:`1px solid ${symFilter===s?"#e879f945":"#1a1a2e"}`,borderRadius:20,color:symFilter===s?"#e879f9":"#555",padding:"4px 12px",fontSize:13,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'IBM Plex Mono',monospace",fontWeight:symFilter===s?700:400}}>
             {s}
           </button>
         ))}
@@ -1154,11 +1183,11 @@ function NewsScanner({onClose}){
       {/* search */}
       <div style={{position:"relative",marginBottom:14}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="חיפוש חדשות..." style={{width:"100%",background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,color:"#fff",fontSize:13,padding:"10px 14px 10px 36px",fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl"}}/>
-        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#444",fontSize:14}}>🔍</span>
+        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#999",fontSize:14}}>🔍</span>
       </div>
 
       {filtered.length===0&&(
-        <div style={{textAlign:"center",padding:"48px 0",color:"#444",fontSize:14}}>לא נמצאו חדשות</div>
+        <div style={{textAlign:"center",padding:"48px 0",color:"#999",fontSize:14}}>לא נמצאו חדשות</div>
       )}
 
       {/* news cards */}
@@ -1176,16 +1205,16 @@ function NewsScanner({onClose}){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
-                  <span style={{background:sm.bg,color:sm.color,fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",border:`1px solid ${sm.border}`,flexShrink:0}}>{n.symbol}</span>
-                  <span style={{background:sm.bg,color:sm.color,fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${sm.border}`,flexShrink:0}}>{sm.icon} {sm.label}</span>
-                  <span style={{color:"#444",fontSize:10,flexShrink:0}}>{n.source} · {timeAgo(n.mins)}</span>
+                  <span style={{background:sm.bg,color:sm.color,fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",border:`1px solid ${sm.border}`,flexShrink:0}}>{n.symbol}</span>
+                  <span style={{background:sm.bg,color:sm.color,fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${sm.border}`,flexShrink:0}}>{sm.icon} {sm.label}</span>
+                  <span style={{color:"#999",fontSize:13,flexShrink:0}}>{n.source} · {timeAgo(n.mins)}</span>
                 </div>
                 <div style={{color:"#ddd",fontSize:13,fontWeight:600,lineHeight:1.4}}>{n.headline}</div>
               </div>
               {/* impact pct */}
               <div style={{textAlign:"center",flexShrink:0,minWidth:44}}>
                 <div style={{color:pctColor,fontSize:14,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{n.pct}</div>
-                <div style={{color:"#333",fontSize:9,marginTop:1}}>השפעה</div>
+                <div style={{color:"#888",fontSize:9,marginTop:1}}>השפעה</div>
               </div>
             </div>
 
@@ -1196,20 +1225,20 @@ function NewsScanner({onClose}){
                 {stock&&(
                   <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                     <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                      <span style={{color:"#444",fontSize:10}}>מחיר:</span>
-                      <span style={{color:"#fff",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>${stock.price}</span>
+                      <span style={{color:"#999",fontSize:13}}>מחיר:</span>
+                      <span style={{color:"#fff",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>${stock.price}</span>
                     </div>
                     <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                      <span style={{color:"#444",fontSize:10}}>שינוי:</span>
-                      <span style={{color:stock.change>=0?"#00ff87":"#ff6b6b",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{stock.change>=0?"+":""}{stock.change}%</span>
+                      <span style={{color:"#999",fontSize:13}}>שינוי:</span>
+                      <span style={{color:stock.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{stock.change>=0?"+":""}{stock.change}%</span>
                     </div>
                     <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                      <span style={{color:"#444",fontSize:10}}>סיגנל:</span>
-                      <span style={{background:stock.sb,color:stock.sc,fontSize:10,padding:"1px 7px",borderRadius:10,fontWeight:700}}>{stock.sig}</span>
+                      <span style={{color:"#999",fontSize:13}}>סיגנל:</span>
+                      <span style={{background:stock.sb,color:stock.sc,fontSize:13,padding:"1px 7px",borderRadius:10,fontWeight:700}}>{stock.sig}</span>
                     </div>
                     <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                      <span style={{color:"#444",fontSize:10}}>RSI:</span>
-                      <span style={{color:stock.rsi<30?"#00ff87":stock.rsi>70?"#ff6b6b":"#ffd93d",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{stock.rsi}</span>
+                      <span style={{color:"#999",fontSize:13}}>RSI:</span>
+                      <span style={{color:stock.rsi<30?"#00ff87":stock.rsi>70?"#ff6b6b":"#ffd93d",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{stock.rsi}</span>
                     </div>
                   </div>
                 )}
@@ -1217,7 +1246,7 @@ function NewsScanner({onClose}){
             )}
 
             {/* expand hint */}
-            <div style={{color:"#333",fontSize:10,marginTop:6,textAlign:"center"}}>{open?"▲ סגור":"▼ קרא עוד"}</div>
+            <div style={{color:"#888",fontSize:13,marginTop:6,textAlign:"center"}}>{open?"▲ סגור":"▼ קרא עוד"}</div>
           </div>
         );
       })}
@@ -1279,7 +1308,7 @@ function EconCalendar({onClose}){
                   <span style={{fontSize:14}}>{ECON_CAT_ICON[e.cat]}</span>
                   <span style={{color:"#ffaaaa",fontSize:13,fontWeight:600}}>{e.name}</span>
                 </div>
-                <span style={{background:"#ff6b6b25",color:"#ff6b6b",fontSize:11,padding:"2px 10px",borderRadius:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",animation:"pulse 2s infinite",flexShrink:0}}>
+                <span style={{background:"#ff6b6b25",color:"#ff6b6b",fontSize:13,padding:"2px 10px",borderRadius:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",animation:"pulse 2s infinite",flexShrink:0}}>
                   {dayLabel(e.days)} · {e.time}
                 </span>
               </div>
@@ -1311,7 +1340,7 @@ function EconCalendar({onClose}){
       </div>
 
       {displayed.length===0&&(
-        <div style={{textAlign:"center",padding:"48px 0",color:"#444",fontSize:14}}>אין אירועים בסינון זה</div>
+        <div style={{textAlign:"center",padding:"48px 0",color:"#999",fontSize:14}}>אין אירועים בסינון זה</div>
       )}
 
       {/* grouped list */}
@@ -1319,10 +1348,10 @@ function EconCalendar({onClose}){
         if(item.type==="header"){
           return(
             <div key={"h"+item.date} style={{display:"flex",alignItems:"center",gap:10,marginTop:i>0?16:0,marginBottom:8}}>
-              <div style={{color:"#38bdf8",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{dateHeb(item.date)}</div>
+              <div style={{color:"#38bdf8",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>{dateHeb(item.date)}</div>
               <div style={{flex:1,height:1,background:"#1a1a2e"}}/>
-              {item.days===0&&<span style={{color:"#38bdf8",fontSize:10,background:"#38bdf820",padding:"1px 8px",borderRadius:20}}>היום</span>}
-              {item.days===1&&<span style={{color:"#ffd93d",fontSize:10,background:"#ffd93d15",padding:"1px 8px",borderRadius:20}}>מחר</span>}
+              {item.days===0&&<span style={{color:"#38bdf8",fontSize:13,background:"#38bdf820",padding:"1px 8px",borderRadius:20}}>היום</span>}
+              {item.days===1&&<span style={{color:"#ffd93d",fontSize:13,background:"#ffd93d15",padding:"1px 8px",borderRadius:20}}>מחר</span>}
             </div>
           );
         }
@@ -1342,7 +1371,7 @@ function EconCalendar({onClose}){
                   <span style={{color:"#fff",fontWeight:600,fontSize:13,lineHeight:1.3}}>{e.name}</span>
                   {isUrgent&&<span style={{background:"#ff6b6b20",color:"#ff6b6b",fontSize:9,padding:"1px 6px",borderRadius:10,fontWeight:700,flexShrink:0,animation:"pulse 1.5s infinite"}}>⚠️</span>}
                 </div>
-                <div style={{display:"flex",gap:10,fontSize:10,color:"#555",flexWrap:"wrap"}}>
+                <div style={{display:"flex",gap:10,fontSize:13,color:"#555",flexWrap:"wrap"}}>
                   <span>🕐 {e.time} (שעון ישראל)</span>
                   {e.fore!=="—"&&<span>תחזית: <span style={{color:"#aaa"}}>{e.fore}</span></span>}
                   {e.prev!=="—"&&<span>קודם: <span style={{color:"#666"}}>{e.prev}</span></span>}
@@ -1351,7 +1380,7 @@ function EconCalendar({onClose}){
 
               {/* left side: impact + countdown */}
               <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
-                <span style={{background:imp.bg,color:imp.color,fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${imp.border}`}}>
+                <span style={{background:imp.bg,color:imp.color,fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,border:`1px solid ${imp.border}`}}>
                   {imp.label}
                 </span>
                 <span style={{color:e.days<2&&e.impact==="high"?"#ff6b6b":e.days<7?"#ffd93d":"#555",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>
@@ -1424,7 +1453,7 @@ function EarningsCalendar({onClose}){
       </div>
 
       {displayed.length===0&&(
-        <div style={{textAlign:"center",padding:"48px 0",color:"#444",fontSize:14}}>אין דיווחים קרובים השבוע</div>
+        <div style={{textAlign:"center",padding:"48px 0",color:"#999",fontSize:14}}>אין דיווחים קרובים השבוע</div>
       )}
 
       {displayed.map((e,i)=>{
@@ -1441,12 +1470,12 @@ function EarningsCalendar({onClose}){
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
                   <span style={{color:"#fff",fontWeight:700,fontSize:16,fontFamily:"'IBM Plex Mono',monospace"}}>{e.symbol}</span>
-                  <span style={{color:"#444",fontSize:12}}>{e.name}</span>
+                  <span style={{color:"#999",fontSize:12}}>{e.name}</span>
                   {isUrgent&&(
-                    <span style={{background:"#ff6b6b20",color:"#ff6b6b",fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:700,animation:"pulse 1.5s infinite"}}>⚠️ דחוף</span>
+                    <span style={{background:"#ff6b6b20",color:"#ff6b6b",fontSize:13,padding:"2px 8px",borderRadius:20,fontWeight:700,animation:"pulse 1.5s infinite"}}>⚠️ דחוף</span>
                   )}
                 </div>
-                <div style={{display:"flex",gap:10,fontSize:11,color:"#555",flexWrap:"wrap"}}>
+                <div style={{display:"flex",gap:10,fontSize:13,color:"#555",flexWrap:"wrap"}}>
                   <span>📅 {dateHeb(e.date)}</span>
                   <span>{e.time==="after"?"⏰ אחרי סגירה":"🌅 לפני פתיחה"}</span>
                   {s&&<span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>}
@@ -1456,7 +1485,7 @@ function EarningsCalendar({onClose}){
               {/* countdown */}
               <div style={{textAlign:"center",minWidth:56,flexShrink:0}}>
                 <div style={{color:accent,fontSize:isUrgent?22:17,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace",lineHeight:1}}>{dayLabel(e.days)}</div>
-                {e.days>2&&<div style={{color:"#333",fontSize:9,marginTop:2}}>נותרו</div>}
+                {e.days>2&&<div style={{color:"#888",fontSize:9,marginTop:2}}>נותרו</div>}
               </div>
             </div>
 
@@ -1464,16 +1493,16 @@ function EarningsCalendar({onClose}){
             {s&&(
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                  <span style={{color:"#444",fontSize:10}}>ציון:</span>
+                  <span style={{color:"#999",fontSize:13}}>ציון:</span>
                   <span style={{color:s.total>=68?"#00ff87":s.total>=48?"#ffd93d":"#ff6b6b",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.total}</span>
                 </div>
                 <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                  <span style={{color:"#444",fontSize:10}}>RSI:</span>
+                  <span style={{color:"#999",fontSize:13}}>RSI:</span>
                   <span style={{color:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.rsi}</span>
                 </div>
                 <div style={{background:"#060608",borderRadius:8,padding:"5px 10px",display:"flex",gap:5,alignItems:"center"}}>
-                  <span style={{color:"#444",fontSize:10}}>סיגנל:</span>
-                  <span style={{background:s.sb,color:s.sc,fontSize:10,padding:"1px 7px",borderRadius:10,fontWeight:700}}>{s.sig}</span>
+                  <span style={{color:"#999",fontSize:13}}>סיגנל:</span>
+                  <span style={{background:s.sb,color:s.sc,fontSize:13,padding:"1px 7px",borderRadius:10,fontWeight:700}}>{s.sig}</span>
                 </div>
               </div>
             )}
@@ -1513,7 +1542,7 @@ function FearGreedMeter(){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:16}}>😱</span>
-          <div style={{color:"#888",fontSize:11,fontWeight:600,letterSpacing:0.5}}>מדד פחד וחמדנות</div>
+          <div style={{color:"#888",fontSize:13,fontWeight:600,letterSpacing:0.5}}>מדד פחד וחמדנות</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{color:color,fontSize:13,fontWeight:700,fontFamily:"'Heebo',sans-serif"}}>{label}</span>
@@ -1528,7 +1557,7 @@ function FearGreedMeter(){
       </div>
 
       {/* labels */}
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#333",marginTop:2}}>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#888",marginTop:2}}>
         {zones.map(z=><span key={z.label} style={{color:z.color,opacity:.7}}>{z.label}</span>)}
       </div>
     </div>
@@ -1577,7 +1606,7 @@ function SectorHeatmap({onClose}){
         <div style={{padding:"18px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #111",position:"sticky",top:0,background:"#0a0a12",zIndex:1}}>
           <div>
             <div style={{color:"#fff",fontSize:16,fontWeight:700}}>🗺️ מפת סקטורים</div>
-            <div style={{color:"#555",fontSize:11,marginTop:2}}>{sectors.length} סקטורים · לפי שינוי ממוצע</div>
+            <div style={{color:"#555",fontSize:13,marginTop:2}}>{sectors.length} סקטורים · לפי שינוי ממוצע</div>
           </div>
           <button className="btn" onClick={onClose} style={{background:"#1a1a2e",border:"none",borderRadius:10,color:"#666",padding:"6px 12px",cursor:"pointer",fontSize:13}}>✕</button>
         </div>
@@ -1592,14 +1621,14 @@ function SectorHeatmap({onClose}){
                 </div>
                 <div style={{color:"#ddd",fontSize:13,fontWeight:700}}>{s.name}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{color:"#555",fontSize:11}}>{s.count} מניות</span>
-                  <span style={{color:"#444",fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>ציון {s.avgScore}</span>
+                  <span style={{color:"#555",fontSize:13}}>{s.count} מניות</span>
+                  <span style={{color:"#999",fontSize:13,fontFamily:"'IBM Plex Mono',monospace"}}>ציון {s.avgScore}</span>
                 </div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:3,marginTop:2}}>
                   {s.stocks.slice(0,4).map(sym=>(
-                    <span key={sym} style={{background:"#ffffff0a",border:"1px solid #ffffff12",borderRadius:5,padding:"1px 5px",color:"#666",fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
+                    <span key={sym} style={{background:"#ffffff0a",border:"1px solid #ffffff12",borderRadius:5,padding:"1px 5px",color:"#666",fontSize:13,fontFamily:"'IBM Plex Mono',monospace"}}>{sym}</span>
                   ))}
-                  {s.stocks.length>4&&<span style={{color:"#444",fontSize:10,padding:"1px 4px"}}>+{s.stocks.length-4}</span>}
+                  {s.stocks.length>4&&<span style={{color:"#999",fontSize:13,padding:"1px 4px"}}>+{s.stocks.length-4}</span>}
                 </div>
               </div>
             );
@@ -1608,7 +1637,7 @@ function SectorHeatmap({onClose}){
         <div style={{padding:"0 20px 16px",display:"flex",gap:8,justifyContent:"center"}}>
           {[{chg:2,label:"עלייה חזקה"},{chg:0,label:"ניטרלי"},{chg:-2,label:"ירידה"}].map(({chg,label})=>{
             const c=cellColor(chg);
-            return <div key={label} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:3,background:c.bg,border:`1px solid ${c.border}`}}/><span style={{color:"#555",fontSize:10}}>{label}</span></div>;
+            return <div key={label} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:3,background:c.bg,border:`1px solid ${c.border}`}}/><span style={{color:"#555",fontSize:13}}>{label}</span></div>;
           })}
         </div>
       </div>
@@ -1643,9 +1672,9 @@ function calcTradeScore(s){
   return Math.max(0,Math.min(100,Math.round(score)));
 }
 function getTradeDecision(score){
-  if(score>=65)return{icon:"✅",label:"מומלץ לסחר",eng:"GOOD TO TRADE",color:"#00ff87",bg:"#00ff8712",border:"#00ff8745"};
-  if(score>=40)return{icon:"⚠️",label:"מסוכן",eng:"RISKY",color:"#ffd93d",bg:"#ffd93d10",border:"#ffd93d40"};
-  return{icon:"❌",label:"לא לסחור",eng:"DON'T TRADE",color:"#ff6b6b",bg:"#ff6b6b10",border:"#ff6b6b40"};
+  if(score>=65)return{icon:"✅",label:"תנאים טכניים חיובים",eng:"DATA POSITIVE",color:"#00ff87",bg:"#00ff8712",border:"#00ff8745"};
+  if(score>=40)return{icon:"⚠️",label:"תנאים מעורבים",eng:"MIXED DATA",color:"#ffd93d",bg:"#ffd93d10",border:"#ffd93d40"};
+  return{icon:"❌",label:"תנאים טכניים שליליים",eng:"DATA NEGATIVE",color:"#ff6b6b",bg:"#ff6b6b10",border:"#ff6b6b40"};
 }
 function TradeDecisionEngine({onClose}){
   const [filter,setFilter]=useState("הכל");
@@ -1662,9 +1691,9 @@ function TradeDecisionEngine({onClose}){
 
   const filtered=enriched
     .filter(s=>{
-      if(filter==="מומלץ")return s.tradeScore>=65;
-      if(filter==="מסוכן")return s.tradeScore>=40&&s.tradeScore<65;
-      if(filter==="לא לסחור")return s.tradeScore<40;
+      if(filter==="תנאים טכניים חיובים")return s.tradeScore>=65;
+      if(filter==="תנאים מעורבים")return s.tradeScore>=40&&s.tradeScore<65;
+      if(filter==="תנאים טכניים שליליים")return s.tradeScore<40;
       return true;
     })
     .sort((a,b)=>sortBy==="score"?b.tradeScore-a.tradeScore:sortBy==="rsi"?a.rsi-b.rsi:b.total-a.total);
@@ -1680,42 +1709,42 @@ function TradeDecisionEngine({onClose}){
 
       {/* Summary bar */}
       <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,padding:"14px 16px",marginBottom:12,direction:"rtl"}}>
-        <div style={{color:"#555",fontSize:11,fontWeight:600,marginBottom:10,letterSpacing:0.5}}>סיכום · {enriched.length} מניות בסקנר</div>
+        <div style={{color:"#555",fontSize:13,fontWeight:600,marginBottom:10,letterSpacing:0.5}}>סיכום · {enriched.length} מניות בסקנר</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
           <div style={{background:"#00ff8710",border:"1px solid #00ff8730",borderRadius:12,padding:"10px",textAlign:"center"}}>
             <div style={{color:"#00ff87",fontSize:22,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{good}</div>
-            <div style={{color:"#00ff87",fontSize:10,marginTop:2}}>✅ מומלץ</div>
+            <div style={{color:"#00ff87",fontSize:13,marginTop:2}}>✅ תנאים חיובים</div>
           </div>
           <div style={{background:"#ffd93d10",border:"1px solid #ffd93d30",borderRadius:12,padding:"10px",textAlign:"center"}}>
             <div style={{color:"#ffd93d",fontSize:22,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{risky}</div>
-            <div style={{color:"#ffd93d",fontSize:10,marginTop:2}}>⚠️ מסוכן</div>
+            <div style={{color:"#ffd93d",fontSize:13,marginTop:2}}>⚠️ מעורב</div>
           </div>
           <div style={{background:"#ff6b6b10",border:"1px solid #ff6b6b30",borderRadius:12,padding:"10px",textAlign:"center"}}>
             <div style={{color:"#ff6b6b",fontSize:22,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{bad}</div>
-            <div style={{color:"#ff6b6b",fontSize:10,marginTop:2}}>❌ לא לסחור</div>
+            <div style={{color:"#ff6b6b",fontSize:13,marginTop:2}}>❌ שלילי</div>
           </div>
         </div>
         {/* Factors legend */}
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           <div style={{display:"flex",alignItems:"center",gap:5,background:"#060608",borderRadius:8,padding:"5px 10px"}}>
-            <span style={{fontSize:11}}>😱</span>
-            <span style={{color:"#888",fontSize:11}}>F&G:</span>
-            <span style={{color:fgInfo.color,fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{fg} {fgInfo.label}</span>
+            <span style={{fontSize:13}}>😱</span>
+            <span style={{color:"#888",fontSize:13}}>F&G:</span>
+            <span style={{color:fgInfo.color,fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{fg} {fgInfo.label}</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:5,background:"#060608",borderRadius:8,padding:"5px 10px"}}>
-            <span style={{fontSize:11}}>📊</span>
-            <span style={{color:"#888",fontSize:11}}>RSI + ציון + Earnings</span>
+            <span style={{fontSize:13}}>📊</span>
+            <span style={{color:"#888",fontSize:13}}>RSI + ציון + Earnings</span>
           </div>
         </div>
       </div>
 
       {/* Filter tabs */}
       <div style={{display:"flex",gap:6,marginBottom:8}}>
-        {[{id:"הכל",label:"הכל"},{id:"מומלץ",label:"✅ מומלץ"},{id:"מסוכן",label:"⚠️ מסוכן"},{id:"לא לסחור",label:"❌ לא לסחור"}].map(f=>{
+        {[{id:"הכל",label:"הכל"},{id:"מומלץ",label:"✅ חיובי"},{id:"תנאים מעורבים",label:"⚠️ מעורב"},{id:"תנאים טכניים שליליים",label:"❌ שלילי"}].map(f=>{
           const active=filter===f.id;
-          const c=f.id==="מומלץ"?"#00ff87":f.id==="מסוכן"?"#ffd93d":f.id==="לא לסחור"?"#ff6b6b":"#555";
+          const c=f.id==="תנאים טכניים חיובים"?"#00ff87":f.id==="תנאים מעורבים"?"#ffd93d":f.id==="תנאים טכניים שליליים"?"#ff6b6b":"#555";
           return(
-            <button key={f.id} className="btn" onClick={()=>setFilter(f.id)} style={{flex:1,background:active?c+"18":"#0d0d18",border:`1px solid ${active?c+"60":"#1a1a2e"}`,borderRadius:10,color:active?c:"#555",padding:"7px 4px",fontSize:11,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400,whiteSpace:"nowrap"}}>
+            <button key={f.id} className="btn" onClick={()=>setFilter(f.id)} style={{flex:1,background:active?c+"18":"#0d0d18",border:`1px solid ${active?c+"60":"#1a1a2e"}`,borderRadius:10,color:active?c:"#555",padding:"7px 4px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:active?700:400,whiteSpace:"nowrap"}}>
               {f.label}
             </button>
           );
@@ -1725,7 +1754,7 @@ function TradeDecisionEngine({onClose}){
       {/* Sort */}
       <div style={{display:"flex",gap:6,marginBottom:12}}>
         {[{id:"score",l:"לפי ציון עסקה"},{id:"total",l:"לפי ציון מניה"},{id:"rsi",l:"לפי RSI"}].map(s=>(
-          <button key={s.id} className="btn" onClick={()=>setSortBy(s.id)} style={{flex:1,background:sortBy===s.id?"#00ff8715":"#0d0d18",border:`1px solid ${sortBy===s.id?"#00ff8740":"#1a1a2e"}`,borderRadius:8,color:sortBy===s.id?"#00ff87":"#444",padding:"6px 4px",fontSize:10,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
+          <button key={s.id} className="btn" onClick={()=>setSortBy(s.id)} style={{flex:1,background:sortBy===s.id?"#00ff8715":"#0d0d18",border:`1px solid ${sortBy===s.id?"#00ff8740":"#1a1a2e"}`,borderRadius:8,color:sortBy===s.id?"#00ff87":"#444",padding:"6px 4px",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
             {s.l}
           </button>
         ))}
@@ -1744,7 +1773,7 @@ function TradeDecisionEngine({onClose}){
                   <span style={{color:"#fff",fontWeight:800,fontSize:16,fontFamily:"'IBM Plex Mono',monospace"}}>{s.symbol}</span>
                   <span style={{color:"#555",fontSize:12}}>{s.name}</span>
                   {s.hasEarningsSoon&&(
-                    <span style={{background:"#fb923c20",color:"#fb923c",fontSize:10,padding:"2px 7px",borderRadius:20,fontWeight:700,animation:s.earningDays<=1?"pulse 1.5s infinite":"none"}}>
+                    <span style={{background:"#fb923c20",color:"#fb923c",fontSize:13,padding:"2px 7px",borderRadius:20,fontWeight:700,animation:s.earningDays<=1?"pulse 1.5s infinite":"none"}}>
                       📅 {s.earningDays===0?"היום":s.earningDays===1?"מחר":`${s.earningDays}י`}
                     </span>
                   )}
@@ -1759,7 +1788,7 @@ function TradeDecisionEngine({onClose}){
               {/* Score bar */}
               <div style={{marginBottom:10}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                  <span style={{color:"#555",fontSize:11}}>ציון עסקה</span>
+                  <span style={{color:"#555",fontSize:13}}>ציון עסקה</span>
                   <span style={{color:s.dec.color,fontSize:18,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{pct}</span>
                 </div>
                 <div style={{height:5,background:"#1a1a2e",borderRadius:3,overflow:"hidden"}}>
@@ -1770,16 +1799,16 @@ function TradeDecisionEngine({onClose}){
               {/* Factor pills */}
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 <div style={{background:"#060608",borderRadius:8,padding:"4px 9px",display:"flex",gap:5,alignItems:"center"}}>
-                  <span style={{color:"#444",fontSize:10}}>RSI</span>
-                  <span style={{color:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.rsi}</span>
+                  <span style={{color:"#999",fontSize:13}}>RSI</span>
+                  <span style={{color:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.rsi}</span>
                 </div>
                 <div style={{background:"#060608",borderRadius:8,padding:"4px 9px",display:"flex",gap:5,alignItems:"center"}}>
-                  <span style={{color:"#444",fontSize:10}}>ציון</span>
-                  <span style={{color:s.total>=68?"#00ff87":s.total>=48?"#ffd93d":"#ff6b6b",fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.total}</span>
+                  <span style={{color:"#999",fontSize:13}}>ציון</span>
+                  <span style={{color:s.total>=68?"#00ff87":s.total>=48?"#ffd93d":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.total}</span>
                 </div>
                 <div style={{background:"#060608",borderRadius:8,padding:"4px 9px",display:"flex",gap:5,alignItems:"center"}}>
-                  <span style={{color:"#444",fontSize:10}}>F&G</span>
-                  <span style={{color:fgInfo.color,fontSize:11,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{fg}</span>
+                  <span style={{color:"#999",fontSize:13}}>F&G</span>
+                  <span style={{color:fgInfo.color,fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{fg}</span>
                 </div>
                 <Badge sig={s.sig} sb={s.sb} sc={s.sc} sm/>
               </div>
@@ -1811,9 +1840,9 @@ function EmotionalBadge({state}){
   const c=EMOTIONAL_CFG[state];
   return(
     <div style={{display:"flex",alignItems:"center",gap:5,background:c.bg,border:`1px solid ${c.border}`,borderRadius:10,padding:"3px 10px",animation:state==="revenge"?"revengeFlash 1.4s infinite":"none"}}>
-      <span style={{fontSize:11}}>{c.icon}</span>
-      <span style={{color:c.color,fontSize:11,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{c.label}</span>
-      <span style={{color:c.color,fontSize:10,opacity:.75,fontFamily:"'Heebo',sans-serif"}}>· {c.he}</span>
+      <span style={{fontSize:13}}>{c.icon}</span>
+      <span style={{color:c.color,fontSize:13,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace"}}>{c.label}</span>
+      <span style={{color:c.color,fontSize:13,opacity:.75,fontFamily:"'Heebo',sans-serif"}}>· {c.he}</span>
     </div>
   );
 }
@@ -1826,7 +1855,7 @@ function TradeLockBanner({reason,onUnlockRequest}){
         <span style={{fontSize:22}}>🔒</span>
         <div>
           <div style={{color:"#ff6b6b",fontSize:13,fontWeight:800,letterSpacing:.5}}>מסחר נעול</div>
-          <div style={{color:"#ff6b6b",fontSize:11,marginTop:2,opacity:.85,maxWidth:200}}>{reason}</div>
+          <div style={{color:"#ff6b6b",fontSize:13,marginTop:2,opacity:.85,maxWidth:200}}>{reason}</div>
         </div>
       </div>
       <button className="btn" onClick={onUnlockRequest} style={{background:"#ff6b6b20",border:"1px solid #ff6b6b50",borderRadius:10,color:"#ff6b6b",padding:"7px 14px",fontSize:12,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700,flexShrink:0}}>
@@ -1840,7 +1869,11 @@ function TradeLockBanner({reason,onUnlockRequest}){
 // PERFORMANCE INSIGHTS — Smart analysis from journal data
 // ══════════════════════════════════════════════════════════════════════
 function PerformanceInsights({onClose}){
-  const trades=SAMPLE_TRADES;
+  const [trades,setTrades]=useState([]);
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{apiCall('/api/trades').then(r=>r.json()).then(d=>{setTrades((Array.isArray(d)?d:[]).map(normalizeTrade));setLoading(false);}).catch(()=>setLoading(false));},[]);
+  if(loading)return <Screen title="💡 תובנות ביצועים" onBack={onClose} accent="#a78bfa"><div style={{textAlign:'center',padding:40,color:'#555'}}>טוען...</div></Screen>;
+  if(!trades.length)return <Screen title="💡 תובנות ביצועים" onBack={onClose} accent="#a78bfa"><div style={{textAlign:'center',padding:40,color:'#555'}}>אין עסקאות עדיין. הוסף עסקאות ביומן.</div></Screen>;
 
   // Day analysis
   const dayMap={};
@@ -1955,7 +1988,7 @@ function PerformanceInsights({onClose}){
 
   return(
     <Screen title="💡 תובנות ביצועים" onBack={onClose} accent="#a78bfa">
-      <div style={{color:"#444",fontSize:12,marginBottom:16,textAlign:"center",lineHeight:1.6}}>
+      <div style={{color:"#999",fontSize:12,marginBottom:16,textAlign:"center",lineHeight:1.6}}>
         ניתוח חכם מבוסס על {trades.length} העסקאות האחרונות שלך
       </div>
 
@@ -1980,7 +2013,7 @@ function PerformanceInsights({onClose}){
                     )}
                   </div>
                 )}
-                <div style={{color:"#666",fontSize:11,fontStyle:"italic"}}>{ins.advice}</div>
+                <div style={{color:"#666",fontSize:13,fontStyle:"italic"}}>{ins.advice}</div>
               </div>
             </div>
           </div>
@@ -1989,7 +2022,7 @@ function PerformanceInsights({onClose}){
 
       {/* Day breakdown visual */}
       <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:16,padding:"16px",marginTop:4}}>
-        <div style={{color:"#555",fontSize:11,marginBottom:14,letterSpacing:1}}>ביצועים לפי יום</div>
+        <div style={{color:"#555",fontSize:13,marginBottom:14,letterSpacing:1}}>ביצועים לפי יום</div>
         {[...dayEntries].sort((a,b)=>b.winRate-a.winRate).map(({day,winRate,pnl,total})=>(
           <div key={day} style={{display:"flex",alignItems:"center",gap:10,marginBottom:11}}>
             <div style={{width:54,color:"#888",fontSize:12,flexShrink:0,textAlign:"right"}}>{day}</div>
@@ -1998,7 +2031,7 @@ function PerformanceInsights({onClose}){
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
               <span style={{color:winRate>=60?"#00ff87":winRate>=40?"#ffd93d":"#ff6b6b",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",width:34,textAlign:"right"}}>{winRate}%</span>
-              <span style={{color:pnl>=0?"#00ff87":"#ff6b6b",fontSize:11,fontFamily:"'IBM Plex Mono',monospace",width:54,textAlign:"right"}}>{pnl>=0?"+":""}${pnl}</span>
+              <span style={{color:pnl>=0?"#00ff87":"#ff6b6b",fontSize:13,fontFamily:"'IBM Plex Mono',monospace",width:54,textAlign:"right"}}>{pnl>=0?"+":""}${pnl}</span>
             </div>
           </div>
         ))}
@@ -2006,19 +2039,254 @@ function PerformanceInsights({onClose}){
 
       {/* Hour heatmap */}
       <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:16,padding:"16px",marginTop:12,marginBottom:4}}>
-        <div style={{color:"#555",fontSize:11,marginBottom:14,letterSpacing:1}}>ביצועים לפי שעה ביום</div>
+        <div style={{color:"#555",fontSize:13,marginBottom:14,letterSpacing:1}}>ביצועים לפי שעה ביום</div>
         <div style={{display:"flex",gap:10}}>
           {[...timeEntries].sort((a,b)=>a.period.localeCompare(b.period)).map(({period,winRate,total,pnl})=>(
             <div key={period} style={{flex:1,background:winRate>=60?"#00ff8715":winRate>=40?"#ffd93d10":"#ff6b6b15",border:`1px solid ${winRate>=60?"#00ff8735":winRate>=40?"#ffd93d30":"#ff6b6b30"}`,borderRadius:12,padding:"12px",textAlign:"center"}}>
               <div style={{color:winRate>=60?"#00ff87":winRate>=40?"#ffd93d":"#ff6b6b",fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{winRate}%</div>
               <div style={{color:"#888",fontSize:12,marginTop:4,fontWeight:600}}>{period}</div>
-              <div style={{color:"#444",fontSize:10,marginTop:3}}>{total} עסקאות</div>
-              <div style={{color:pnl>=0?"#00ff8790":"#ff6b6b90",fontSize:10,fontFamily:"'IBM Plex Mono',monospace",marginTop:2}}>{pnl>=0?"+":""}${pnl}</div>
+              <div style={{color:"#999",fontSize:13,marginTop:3}}>{total} עסקאות</div>
+              <div style={{color:pnl>=0?"#00ff8790":"#ff6b6b90",fontSize:13,fontFamily:"'IBM Plex Mono',monospace",marginTop:2}}>{pnl>=0?"+":""}${pnl}</div>
             </div>
           ))}
         </div>
       </div>
     </Screen>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CANDLESTICK CHART
+// ══════════════════════════════════════════════════════════════════════
+function CandleChart({bars}){
+  if(!bars||bars.length===0)return null;
+  const W=340,H=170,PT=10,PB=28,PL=6,PR=6;
+  const chartW=W-PL-PR,chartH=H-PT-PB;
+  const maxP=Math.max(...bars.map(b=>b.h));
+  const minP=Math.min(...bars.map(b=>b.l));
+  const range=maxP-minP||1;
+  const n=bars.length;
+  const slotW=chartW/n;
+  const candleW=Math.max(2,slotW-2);
+  const yS=v=>PT+chartH*(1-(v-minP)/range);
+  const xC=i=>PL+(i+0.5)*slotW;
+  const fmt=v=>v>=1000?v.toFixed(0):v.toFixed(2);
+  const dates=bars.map(b=>{const d=new Date(b.t);return`${d.getMonth()+1}/${d.getDate()}`;});
+  const step=Math.max(1,Math.floor(n/5));
+  return(
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{display:"block"}}>
+      {bars.map((b,i)=>{
+        const bull=b.c>=b.o;
+        const col=bull?"#00ff87":"#ff6b6b";
+        const cx=xC(i);
+        const bTop=yS(Math.max(b.o,b.c));
+        const bBot=yS(Math.min(b.o,b.c));
+        const bH=Math.max(1,bBot-bTop);
+        return(
+          <g key={i}>
+            <line x1={cx} y1={yS(b.h)} x2={cx} y2={yS(b.l)} stroke={col} strokeWidth={1}/>
+            <rect x={cx-candleW/2} y={bTop} width={candleW} height={bH} fill={col} rx={0.5}/>
+          </g>
+        );
+      })}
+      <text x={PR} y={PT+8} fill="#555" fontSize={8} textAnchor="start">{fmt(maxP)}</text>
+      <text x={PR} y={H-PB+4} fill="#555" fontSize={8} textAnchor="start">{fmt(minP)}</text>
+      {dates.map((d,i)=>i%step===0&&(
+        <text key={i} x={xC(i)} y={H-4} fill="#444" fontSize={8} textAnchor="middle">{d}</text>
+      ))}
+    </svg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// STOCK ANALYSIS SCREEN
+// ══════════════════════════════════════════════════════════════════════
+function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
+  const sym=symbol.toUpperCase().trim();
+  const stock=ALL_STOCKS.find(s=>s.symbol===sym);
+  const news=NEWS_DB.filter(n=>n.symbol===sym);
+  const earning=EARNINGS_DATA.find(e=>e.symbol===sym);
+  const earningDays=earning?daysUntil(earning.date):null;
+  const [aiSummary,setAiSummary]=useState(null);
+  const [aiLoading,setAiLoading]=useState(false);
+  const [livePrice,setLivePrice]=useState(null);
+  const tvRef=useRef(null);
+  const mono="'IBM Plex Mono',monospace";
+  const heebo="'Heebo',sans-serif";
+
+  useEffect(()=>{
+    setLivePrice(null);
+    apiCall(`/api/market/bars/${sym}`)
+      .then(r=>r.json())
+      .then(d=>{const arr=Array.isArray(d?.results)?d.results:[];if(arr.length>0)setLivePrice(arr[arr.length-1].c);})
+      .catch(()=>{});
+  },[sym]);
+
+  useEffect(()=>{
+    if(!tvRef.current)return;
+    const cid=`tv_${sym}`;
+    tvRef.current.innerHTML=`<div id="${cid}"></div>`;
+    const init=()=>{
+      if(!window.TradingView||!document.getElementById(cid))return;
+      new window.TradingView.widget({width:"100%",height:440,symbol:sym,interval:"D",timezone:"Asia/Jerusalem",theme:"dark",style:"1",locale:"he_IL",toolbar_bg:"#1a1a2e",enable_publishing:false,hide_top_toolbar:false,container_id:cid});
+    };
+    if(window.TradingView){init();}
+    else{
+      let s=document.querySelector('script[src*="tradingview.com/tv.js"]');
+      if(!s){s=document.createElement('script');s.src='https://s3.tradingview.com/tv.js';document.head.appendChild(s);}
+      s.addEventListener('load',init,{once:true});
+    }
+    return()=>{if(tvRef.current)tvRef.current.innerHTML='';};
+  },[sym]);
+
+  function buildFallback(){
+    if(!stock)return`אין נתונים מקומיים עבור ${sym}.`;
+    const rsiNote=stock.rsi<30?"RSI נמוך מ-30 — מצב מכור-יתר":stock.rsi>70?"RSI גבוה מ-70 — מצב קנוי-יתר":`RSI ${stock.rsi} — בטווח נורמלי`;
+    const macdNote=`MACD ${stock.macd>0?"חיובי":"שלילי"} (${stock.macd})`;
+    const emaNote=`המחיר ${stock.price>stock.ema20?"מעל":"מתחת"} EMA20`;
+    const earnNote=earningDays!==null&&earningDays>=0&&earningDays<=7?` | דיווח רבעוני בעוד ${earningDays} ימים`:"";
+    return`${rsiNote}. ${macdNote}. ${emaNote}. ציון כולל: ${stock.total}/100.${earnNote}`;
+  }
+
+  async function generateAI(){
+    setAiLoading(true);setAiSummary(null);
+    try{
+      let ctx=stock
+        ?`מניה: ${sym}. מחיר: ${stock.price}. שינוי: ${stock.change}%. RSI: ${stock.rsi}. MACD: ${stock.macd}. מחיר ${stock.price>stock.ema20?"מעל":"מתחת"} EMA20. EMA20 ${stock.ema20>stock.ema50?"מעל":"מתחת"} EMA50. ציון טכני: ${stock.tech}/100. ציון פונד': ${stock.fund}/100. ציון סנטימנט: ${stock.sent}/100. תמיכה: ${stock.support}. התנגדות: ${stock.resist}.`
+        :`מניה: ${sym}. אין נתונים מקומיים.`;
+      if(earningDays!==null&&earningDays>=0&&earningDays<=7)ctx+=` דיווח רבעוני בעוד ${earningDays} ימים.`;
+      if(news.length>0)ctx+=` חדשות: ${news.slice(0,2).map(n=>n.headline).join('. ')}.`;
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,system:"אתה מנתח נתוני מסחר. סכם בעברית קצרה את הנתונים הטכניים הבאים בלי להמליץ קנה/מכור. הצג רק עובדות ומה הנתונים מראים. 3 משפטים קצרים.",messages:[{role:"user",content:ctx}]})});
+      const d=await res.json();
+      const txt=d.content?.[0]?.text;
+      setAiSummary(txt||buildFallback());
+    }catch{setAiSummary(buildFallback());}
+    setAiLoading(false);
+  }
+  useEffect(()=>{generateAI();},[sym]);
+
+  const sc=(s)=>s>=65?"#00ff87":s>=40?"#ffd93d":"#ff6b6b";
+  const rsiColor=stock?(stock.rsi<30?"#00ff87":stock.rsi>70?"#ff6b6b":"#ffd93d"):"#aaa";
+
+  const Row=({label,value,valueColor="#fff",valueFont=mono})=>(
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:"#060608",borderRadius:10,marginBottom:8,direction:"rtl"}}>
+      <span style={{color:"#888",fontSize:13,flexShrink:0,fontFamily:heebo}}>{label}</span>
+      <span style={{color:valueColor,fontSize:13,fontWeight:700,fontFamily:valueFont,textAlign:"left"}}>{value}</span>
+    </div>
+  );
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"#060608",zIndex:300,display:"flex",flexDirection:"column",direction:"rtl",fontFamily:heebo}}>
+      <style>{CSS}</style>
+      {/* Sticky header */}
+      <div style={{background:"#0a0a12",borderBottom:"1px solid #1a1a2e",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,flexShrink:0,flexWrap:"wrap"}}>
+        <button onClick={onClose} style={{background:"#1a1a2e",border:"none",color:"#888",width:34,height:34,borderRadius:"50%",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>←</button>
+        <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:0,flexWrap:"wrap"}}>
+          <span style={{color:"#fff",fontSize:18,fontWeight:700,fontFamily:"'Syne',sans-serif",whiteSpace:"nowrap"}}>{sym}</span>
+          {stock&&<Badge sig={stock.sig} sb={stock.sb} sc={stock.sc}/>}
+          {stock&&<span style={{color:stock.change>=0?"#00ff87":"#ff6b6b",fontSize:14,fontWeight:700,fontFamily:mono,whiteSpace:"nowrap"}}>{stock.change>=0?"+":""}{stock.change}%</span>}
+        </div>
+        <span style={{color:"#fff",fontSize:20,fontWeight:700,fontFamily:mono,flexShrink:0}}>
+          {livePrice!=null?`$${livePrice.toFixed(2)}`:stock?`$${stock.price}`:""}
+        </span>
+      </div>
+
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px 24px"}}>
+
+        {/* Block 0: TradingView Chart */}
+        <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,overflow:"hidden",marginBottom:12}}>
+          <div ref={tvRef} style={{width:"100%",height:440}}/>
+        </div>
+
+        {/* Block 1: Technical */}
+        {stock&&(
+          <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{color:"#555",fontSize:13,marginBottom:10,letterSpacing:.5}}>📊 ניתוח טכני</div>
+            <Row label="RSI" value={`${stock.rsi} — ${stock.rsi<30?"מכור-יתר":stock.rsi>70?"קנוי-יתר":"נורמלי"}`} valueColor={rsiColor}/>
+            <Row label="MACD" value={stock.macd} valueColor={stock.macd>=0?"#00ff87":"#ff6b6b"}/>
+            <Row label="מחיר vs EMA20" value={stock.price>stock.ema20?"מעל EMA20":"מתחת EMA20"} valueColor={stock.price>stock.ema20?"#00ff87":"#ff6b6b"}/>
+            <Row label="EMA20 vs EMA50" value={stock.ema20>stock.ema50?"EMA20 מעל EMA50":"EMA20 מתחת EMA50"} valueColor={stock.ema20>stock.ema50?"#00ff87":"#ff6b6b"}/>
+            <Row label="נפח מסחר (x)" value={stock.vol} valueColor={stock.vol>2.8?"#00ff87":"#aaa"}/>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:8}}>
+              {[{l:"טכני",v:stock.tech},{l:"פונדמנטלי",v:stock.fund},{l:"סנטימנט",v:stock.sent}].map(({l,v})=>(
+                <div key={l} style={{background:"#060608",borderRadius:10,padding:"10px",textAlign:"center"}}>
+                  <div style={{color:sc(v),fontSize:18,fontWeight:700,fontFamily:mono}}>{v}</div>
+                  <div style={{color:"#888",fontSize:11,marginTop:3,fontFamily:heebo}}>{l}</div>
+                  <div style={{height:3,background:"#1a1a2e",borderRadius:2,marginTop:6}}><div style={{width:`${v}%`,height:"100%",background:sc(v),borderRadius:2}}/></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Block 2: Support/Resistance */}
+        {stock&&(
+          <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{color:"#555",fontSize:13,marginBottom:10,letterSpacing:.5}}>🎯 תמיכה והתנגדות</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[{l:"תמיכה",v:`$${stock.support}`,c:"#00ff87"},{l:"התנגדות",v:`$${stock.resist}`,c:"#ff6b6b"},{l:"סטופ מחושב",v:`$${stock.stop}`,c:"#ff6b6b"},{l:"יעד",v:`$${stock.target}`,c:"#00ff87"}].map(({l,v,c})=>(
+                <div key={l} style={{background:"#060608",borderRadius:10,padding:"12px"}}>
+                  <div style={{color:"#888",fontSize:11,marginBottom:6,fontFamily:heebo}}>{l}</div>
+                  <div style={{color:c,fontSize:18,fontWeight:700,fontFamily:mono}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <Row label="R:R יחס" value={`${stock.rr}:1`} valueColor={stock.rr>=2?"#00ff87":"#ffd93d"}/>
+            {stock.rr<2&&<div style={{background:"#ffd93d12",border:"1px solid #ffd93d35",borderRadius:10,padding:"9px 12px",fontSize:13,color:"#ffd93d"}}>⚠️ R:R נמוך מ-2:1 — שקול לדלג על העסקה</div>}
+          </div>
+        )}
+
+        {/* Block 3: News */}
+        {news.length>0&&(
+          <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{color:"#555",fontSize:13,marginBottom:10,letterSpacing:.5}}>📰 חדשות אחרונות</div>
+            {news.slice(0,3).map(n=>{
+              const sm=SENT_META[n.sent];
+              return(
+                <div key={n.id} style={{background:sm.bg,border:`1px solid ${sm.border}`,borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <span style={{color:sm.color,fontSize:12,fontWeight:700}}>{sm.icon} {n.pct}</span>
+                    <span style={{color:"#555",fontSize:12}}>{n.source}</span>
+                  </div>
+                  <div style={{color:"#ccc",fontSize:12,lineHeight:1.5}}>{n.headline}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Block 4: Earnings */}
+        {earningDays!==null&&earningDays>=0&&earningDays<=14&&(
+          <div style={{background:"#fb923c18",border:"1px solid #fb923c40",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{color:"#555",fontSize:13,marginBottom:8,letterSpacing:.5}}>📅 דיווח רבעוני</div>
+            <div style={{color:"#fb923c",fontSize:14,fontWeight:700}}>
+              {earningDays===0?"דיווח היום!":earningDays===1?"דיווח מחר":`דיווח בעוד ${earningDays} ימים`}
+            </div>
+            <div style={{color:"#888",fontSize:13,marginTop:4}}>{earning.date} · {earning.time==="after"?"אחרי סגירה":"לפני פתיחה"}</div>
+          </div>
+        )}
+
+        {/* Block 5: AI Summary */}
+        <div style={{background:"#0a0a12",border:"1px solid #a78bfa30",borderRadius:14,padding:"14px",marginBottom:12}}>
+          <div style={{color:"#555",fontSize:13,marginBottom:10,letterSpacing:.5}}>🤖 סיכום נתונים AI</div>
+          {aiLoading?(
+            <div style={{color:"#a78bfa",fontSize:13,animation:"pulse 1.5s infinite"}}>מנתח נתונים...</div>
+          ):(
+            <div style={{color:"#ccc",fontSize:13,lineHeight:1.8}}>{aiSummary}</div>
+          )}
+          <button onClick={generateAI} disabled={aiLoading} style={{marginTop:10,background:"#a78bfa20",border:"1px solid #a78bfa40",borderRadius:8,color:"#a78bfa",fontSize:13,padding:"7px 14px",cursor:"pointer",fontFamily:heebo}}>
+            {aiLoading?"טוען...":"רענן ניתוח"}
+          </button>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+          <button onClick={()=>onOpenSizer&&onOpenSizer(sym)} style={{background:"#ffd93d20",border:"1px solid #ffd93d40",borderRadius:12,color:"#ffd93d",fontSize:13,padding:"12px 6px",cursor:"pointer",fontFamily:heebo,fontWeight:700}}>📐 Position Size</button>
+          <button onClick={()=>onOpenJournal&&onOpenJournal(sym)} style={{background:"#00ff8720",border:"1px solid #00ff8740",borderRadius:12,color:"#00ff87",fontSize:13,padding:"12px 6px",cursor:"pointer",fontFamily:heebo,fontWeight:700}}>📋 יומן</button>
+          <button onClick={onClose} style={{background:"#1a1a2e",border:"1px solid #2a2a3e",borderRadius:12,color:"#888",fontSize:13,padding:"12px 6px",cursor:"pointer",fontFamily:heebo,fontWeight:700}}>✕ סגור</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -2085,7 +2353,7 @@ function PreTradeAdvisor({emotional, tradeCount, todayPnl, profile}){
     color   = "#ffd93d";
     bg      = "#ffd93d10";
     border  = "#ffd93d45";
-    verdict = `RSI גבוה ב-${overbought.length} מניות — שוק מתוח, היזהר בקנייה`;
+    verdict = `RSI גבוה ב-${overbought.length} מניות — שוק מתוח, נתונים מעורבים`;
   } else if (fgExtreme && fg <= 20) {
     icon    = "🟡";
     color   = "#ffd93d";
@@ -2099,7 +2367,7 @@ function PreTradeAdvisor({emotional, tradeCount, todayPnl, profile}){
     border  = "#00ff8740";
     const os = ALL_STOCKS.filter(s => s.rsi < 30).length;
     verdict = os > 2
-      ? `מצב תקין · ${os} מניות RSI נמוך — הזדמנויות קנייה · פעל לפי התוכנית`
+      ? `מצב תקין · ${os} מניות RSI נמוך — נתונים חיוביים · פעל לפי התוכנית`
       : "מצב רגשי תקין · שוק ניתן למסחר · פעל לפי התוכנית שלך";
   }
 
@@ -2122,18 +2390,18 @@ function PreTradeAdvisor({emotional, tradeCount, todayPnl, profile}){
       <div style={{display:"flex", alignItems:"flex-start", gap:10}}>
         <span style={{fontSize:16, flexShrink:0, marginTop:2}}>{icon}</span>
         <div style={{flex:1, minWidth:0}}>
-          <div style={{color:"#555", fontSize:10, marginBottom:3, letterSpacing:.5}}>🤖 AI COACH · המלצה לפני עסקה</div>
+          <div style={{color:"#555", fontSize:13, marginBottom:3, letterSpacing:.5}}>🤖 AI COACH · המלצה לפני עסקה</div>
           <div style={{color, fontSize:13, fontWeight:700, lineHeight:1.5}}>{verdict}</div>
         </div>
         <div style={{flexShrink:0, textAlign:"left", minWidth:90}}>
-          <div style={{color:"#444", fontSize:9, marginBottom:2}}>גודל מומלץ</div>
-          <div style={{color, fontSize:11, fontWeight:700, fontFamily:"'IBM Plex Mono',monospace"}}>{posMsg}</div>
+          <div style={{color:"#999", fontSize:9, marginBottom:2}}>גודל מומלץ</div>
+          <div style={{color, fontSize:13, fontWeight:700, fontFamily:"'IBM Plex Mono',monospace"}}>{posMsg}</div>
         </div>
       </div>
       {pills.length > 0 && (
         <div style={{display:"flex", gap:6, marginTop:8, flexWrap:"wrap"}}>
           {pills.map((p,i) => (
-            <span key={i} style={{background:p.c+"20", color:p.c, fontSize:10, padding:"2px 8px", borderRadius:20, fontWeight:700, border:`1px solid ${p.c}40`}}>{p.label}</span>
+            <span key={i} style={{background:p.c+"20", color:p.c, fontSize:13, padding:"2px 8px", borderRadius:20, fontWeight:700, border:`1px solid ${p.c}40`}}>{p.label}</span>
           ))}
         </div>
       )}
@@ -2141,120 +2409,621 @@ function PreTradeAdvisor({emotional, tradeCount, todayPnl, profile}){
   );
 }
 
-// ── ONBOARDING QUESTIONNAIRE ──────────────────────────────────────────
-const ONBOARDING_KEY = "tradeos_onboarding_v1";
+// ── REGISTRATION SCREEN ───────────────────────────────────────────────
+const AUTH_API='https://tradeos-backend-production-e5fd.up.railway.app';
+const TOKEN_KEY='tradeos_token';
 
-function OnboardingScreen({onComplete}){
-  const [step,setStep]=useState(0);
-  const [answers,setAnswers]=useState({experience:null,portfolioSize:null,tradingStyle:null});
-  const [animating,setAnimating]=useState(false);
+const DAYS_HE=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+function apiCall(path,opts={}){
+  const token=localStorage.getItem(TOKEN_KEY);
+  return fetch(AUTH_API+path,{...opts,headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`,...(opts.headers||{})}});
+}
+function normalizeTrade(t){
+  const d=t.date?new Date(t.date):null;
+  const ca=t.created_at?new Date(t.created_at):null;
+  const hNum=ca?ca.getHours():null;
+  return{...t,
+    followedPlan:t.followed_plan??t.followedPlan??true,
+    pnl:parseFloat(t.pnl)||0,
+    entry:parseFloat(t.entry)||0,
+    exit:parseFloat(t.exit)||0,
+    qty:parseFloat(t.qty)||0,
+    day:d?DAYS_HE[d.getUTCDay()]:'',
+    hour:t.hour||(hNum!=null?`${String(hNum).padStart(2,'0')}:00`:''),
+  };
+}
 
-  const questions=[
-    {
-      key:"experience",
-      title:"מה רמת הניסיון שלך?",
-      subtitle:"נתאים את הממשק לרמה שלך",
-      options:[
-        {value:"beginner",   label:"מתחיל",   icon:"🌱", desc:"מסחר עד שנה"},
-        {value:"advanced",   label:"מתקדם",   icon:"📈", desc:"1–5 שנות ניסיון"},
-        {value:"professional",label:"מקצועי", icon:"🏆", desc:"מעל 5 שנים"},
-      ]
-    },
-    {
-      key:"portfolioSize",
-      title:"מה גודל התיק שלך?",
-      subtitle:"נכוון את הכלים לגודל ההון שלך",
-      options:[
-        {value:"small",  label:"עד $10K",      icon:"💵", desc:"מתחיל לבנות הון"},
-        {value:"medium", label:"$10K–$50K",    icon:"💰", desc:"תיק ביניים"},
-        {value:"large",  label:"מעל $50K",     icon:"💎", desc:"תיק גדול"},
-      ]
-    },
-    {
-      key:"tradingStyle",
-      title:"מה סגנון המסחר שלך?",
-      subtitle:"נציג את הכלים הרלוונטיים ביותר",
-      options:[
-        {value:"swing", label:"סווינג",  icon:"🌊", desc:"החזקה ימים–שבועות"},
-        {value:"daily", label:"יומי",    icon:"⚡", desc:"פתיחה וסגירה ביום"},
-        {value:"both",  label:"שניהם",  icon:"🎯", desc:"גמישות מלאה"},
-      ]
-    },
-  ];
+const ONBOARDING_KEY = "tradeos_user_v1";
 
-  function pick(val){
-    const newAnswers={...answers,[questions[step].key]:val};
-    setAnswers(newAnswers);
-    setAnimating(true);
-    setTimeout(()=>{
-      setAnimating(false);
-      if(step<questions.length-1) setStep(step+1);
-      else onComplete(newAnswers);
-    },300);
+const TRADING_STYLES=[
+  {value:"swing", label:"סווינג",    desc:"החזקה ימים–שבועות"},
+  {value:"daily", label:"יומי",      desc:"פתיחה וסגירה ביום"},
+  {value:"both",  label:"שניהם",    desc:"גמישות מלאה"},
+  {value:"position",label:"פוזיציה",desc:"החזקה שבועות–חודשים"},
+];
+
+const PORTFOLIO_SIZES=[
+  {value:"small",  label:"עד $10K"},
+  {value:"medium", label:"$10K–$50K"},
+  {value:"large",  label:"$50K–$200K"},
+  {value:"xlarge", label:"מעל $200K"},
+];
+
+const LEGAL_TEXT=`TradeOS היא כלי עזר לסוחרים בלבד. המערכת אינה מורשית לייעוץ השקעות, אינה בנק ואינה ברוקר. כל המידע המוצג הוא לצרכי מחקר בלבד. החלטות מסחר והשקעה הן באחריות המשתמש בלבד. ביצועי עבר אינם מעידים על תשואות עתידיות.`;
+
+function LoginScreen({onLogin,onGoRegister}){
+  const [email,setEmail]=useState('');
+  const [password,setPassword]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState('');
+
+  async function submit(e){
+    e.preventDefault();
+    setLoading(true);setError('');
+    try{
+      const res=await fetch(`${AUTH_API}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||'שגיאה בהתחברות');
+      onLogin(data.token,data.user);
+    }catch(err){setError(err.message);}
+    finally{setLoading(false);}
   }
 
-  const q=questions[step];
-  const portfolioDefault={small:10000,medium:30000,large:100000};
+  const inp={width:'100%',background:'#0d0d18',border:'1px solid #1e1e2e',borderRadius:10,padding:'12px 14px',color:'#fff',fontSize:14,fontFamily:"'Heebo',sans-serif",outline:'none'};
+  const lbl={color:'#888',fontSize:12,marginBottom:5,display:'block'};
 
   return(
-    <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#060608",direction:"rtl",fontFamily:"'Heebo',sans-serif",padding:24}}>
+    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#060608',direction:'rtl',fontFamily:"'Heebo',sans-serif",padding:24}}>
       <style>{CSS}</style>
-      {/* Logo */}
-      <div style={{marginBottom:40,textAlign:"center"}}>
-        <div style={{width:56,height:56,background:"linear-gradient(135deg,#00ff87,#00cc6a)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,color:"#000",fontFamily:"'Syne',sans-serif",margin:"0 auto 14px"}}>TO</div>
-        <div style={{color:"#fff",fontSize:24,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:2}}>TRADEOS</div>
-        <div style={{color:"#444",fontSize:13,marginTop:4}}>נגדיר את הפלטפורמה לפי הצרכים שלך</div>
+      <div style={{marginBottom:32,textAlign:'center'}}>
+        <div style={{width:52,height:52,background:'linear-gradient(135deg,#00ff87,#00cc6a)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:800,color:'#000',fontFamily:"'Syne',sans-serif",margin:'0 auto 12px'}}>TO</div>
+        <div style={{color:'#fff',fontSize:24,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:2}}>TRADEOS</div>
+        <div style={{color:'#555',fontSize:13,marginTop:6}}>פלטפורמת המסחר החכמה</div>
       </div>
-
-      {/* Progress dots */}
-      <div style={{display:"flex",gap:8,marginBottom:36}}>
-        {questions.map((_,i)=>(
-          <div key={i} style={{width:i===step?24:8,height:8,borderRadius:4,background:i<step?"#00ff87":i===step?"#00ff87":"#1a1a2e",transition:"all .3s"}}/>
-        ))}
-      </div>
-
-      {/* Question card */}
-      <div style={{background:"#0a0a12",border:"1px solid #1a1a2e",borderRadius:20,padding:"32px 28px",maxWidth:440,width:"100%",opacity:animating?0:1,transform:animating?"translateX(-20px)":"translateX(0)",transition:"all .25s"}}>
-        <div style={{fontSize:22,fontWeight:700,color:"#fff",marginBottom:6,lineHeight:1.4}}>{q.title}</div>
-        <div style={{fontSize:13,color:"#555",marginBottom:28}}>{q.subtitle}</div>
-        <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {q.options.map(opt=>(
-            <button key={opt.value} className="btn" onClick={()=>pick(opt.value)}
-              style={{display:"flex",alignItems:"center",gap:14,background:"#0d0d18",border:"1px solid #1e1e2e",borderRadius:14,padding:"16px 18px",cursor:"pointer",textAlign:"right",transition:"all .2s",width:"100%"}}>
-              <span style={{fontSize:26,flexShrink:0}}>{opt.icon}</span>
-              <div style={{flex:1}}>
-                <div style={{color:"#fff",fontSize:16,fontWeight:600,fontFamily:"'Heebo',sans-serif"}}>{opt.label}</div>
-                <div style={{color:"#444",fontSize:12,marginTop:2}}>{opt.desc}</div>
-              </div>
-              <span style={{color:"#222",fontSize:18}}>‹</span>
-            </button>
-          ))}
+      <div style={{background:'#0a0a12',border:'1px solid #1a1a2e',borderRadius:20,padding:'32px 28px',maxWidth:400,width:'100%'}}>
+        <div style={{color:'#fff',fontSize:18,fontWeight:800,fontFamily:"'Syne',sans-serif",marginBottom:6}}>התחברות</div>
+        <div style={{color:'#444',fontSize:12,marginBottom:24}}>ברוך הבא חזרה</div>
+        <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:16}}>
+          <div>
+            <label style={lbl}>אימייל</label>
+            <input type="email" style={{...inp,direction:'ltr'}} placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} required/>
+          </div>
+          <div>
+            <label style={lbl}>סיסמא</label>
+            <input type="password" style={{...inp,direction:'ltr'}} placeholder="••••••••" value={password} onChange={e=>setPassword(e.target.value)} required/>
+          </div>
+          {error&&<div style={{background:'#ff6b6b12',border:'1px solid #ff6b6b30',borderRadius:8,padding:'10px 12px',color:'#ff6b6b',fontSize:13}}>{error}</div>}
+          <button type="submit" className="btn" disabled={loading} style={{background:'linear-gradient(135deg,#00ff87,#00cc6a)',border:'none',borderRadius:12,color:'#000',fontSize:15,fontWeight:800,padding:'14px',cursor:'pointer',fontFamily:"'Heebo',sans-serif",opacity:loading?0.7:1,marginTop:4}}>
+            {loading?'מתחבר...':'התחבר'}
+          </button>
+        </form>
+        <div style={{textAlign:'center',marginTop:20,color:'#555',fontSize:13}}>
+          אין לך חשבון?{' '}
+          <button onClick={onGoRegister} style={{background:'none',border:'none',color:'#00ff87',cursor:'pointer',fontSize:13,fontFamily:"'Heebo',sans-serif",fontWeight:700}}>הרשם עכשיו</button>
         </div>
       </div>
-
-      <div style={{color:"#222",fontSize:11,marginTop:28}}>שאלה {step+1} מתוך {questions.length}</div>
     </div>
   );
 }
 
+function RegisterScreen({onRegister,onGoLogin}){
+  const [step,setStep]=useState(0);
+  const [form,setForm]=useState({fullName:'',email:'',password:'',confirmPassword:'',country:''});
+  const [pref,setPref]=useState({experienceYears:'',portfolioSize:'',tradingStyle:''});
+  const [checks,setChecks]=useState({terms:false,age:false,noAdvice:false});
+  const [signature,setSignature]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState('');
+  const [fieldErrors,setFieldErrors]=useState({});
+
+  const inp={width:'100%',background:'#0d0d18',border:'1px solid #1e1e2e',borderRadius:10,padding:'12px 14px',color:'#fff',fontSize:14,fontFamily:"'Heebo',sans-serif",outline:'none'};
+  const lbl={color:'#888',fontSize:12,marginBottom:5,display:'block'};
+
+  function validateStep0(){
+    const errs={};
+    if(form.fullName.trim().length<2)errs.fullName='שם מלא נדרש';
+    if(!/\S+@\S+\.\S+/.test(form.email))errs.email='אימייל לא תקין';
+    if(form.password.length<6)errs.password='סיסמא — לפחות 6 תווים';
+    if(form.password!==form.confirmPassword)errs.confirmPassword='הסיסמאות אינן תואמות';
+    setFieldErrors(errs);
+    return Object.keys(errs).length===0;
+  }
+
+  const allChecked=checks.terms&&checks.age&&checks.noAdvice;
+  const signatureValid=signature.trim().toLowerCase()===form.fullName.trim().toLowerCase()&&signature.trim().length>=2;
+  const canSubmit=allChecked&&signatureValid;
+
+  async function submit(){
+    if(!canSubmit)return;
+    setLoading(true);setError('');
+    try{
+      const body={full_name:form.fullName.trim(),email:form.email.trim(),password:form.password,country:form.country.trim()||null,experience:pref.experienceYears||null,portfolio_size:pref.portfolioSize||null,trading_style:pref.tradingStyle||null,disclaimer_signed:true,disclaimer_signed_at:new Date().toISOString(),signature:signature.trim()};
+      const res=await fetch(`${AUTH_API}/api/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||'שגיאה בהרשמה');
+      const answers={fullName:form.fullName.trim(),country:form.country.trim(),experienceYears:pref.experienceYears,portfolioSize:pref.portfolioSize,tradingStyle:pref.tradingStyle,signature:signature.trim(),agreedAt:new Date().toISOString()};
+      onRegister(data.token,data.user,answers);
+    }catch(err){setError(err.message);}
+    finally{setLoading(false);}
+  }
+
+  const stepLabels=['פרטי חשבון','פרופיל מסחר','הצהרה משפטית'];
+
+  return(
+    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#060608',direction:'rtl',fontFamily:"'Heebo',sans-serif",padding:24,overflowY:'auto'}}>
+      <style>{CSS}</style>
+      <div style={{marginBottom:22,textAlign:'center'}}>
+        <div style={{width:48,height:48,background:'linear-gradient(135deg,#00ff87,#00cc6a)',borderRadius:13,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:800,color:'#000',fontFamily:"'Syne',sans-serif",margin:'0 auto 10px'}}>TO</div>
+        <div style={{color:'#fff',fontSize:20,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:2}}>TRADEOS</div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:18}}>
+        {stepLabels.map((s,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:26,height:26,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,
+              background:step===i?'linear-gradient(135deg,#00ff87,#00cc6a)':step>i?'#00cc6a30':'#0d0d18',
+              color:step===i?'#000':step>i?'#00cc6a':'#333',
+              border:`1px solid ${step===i?'transparent':step>i?'#00cc6a40':'#1a1a2e'}`}}>
+              {step>i?'✓':i+1}
+            </div>
+            {i<stepLabels.length-1&&<div style={{width:24,height:1,background:'#1a1a2e'}}/>}
+          </div>
+        ))}
+      </div>
+      <div style={{background:'#0a0a12',border:'1px solid #1a1a2e',borderRadius:20,padding:'28px 24px',maxWidth:460,width:'100%'}}>
+
+        {step===0&&(
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{color:'#fff',fontSize:17,fontWeight:800,fontFamily:"'Syne',sans-serif"}}>פרטי חשבון</div>
+            <div style={{color:'#444',fontSize:12,marginBottom:4}}>שלב 1 מתוך 3</div>
+            {[
+              {key:'fullName',label:'שם מלא',type:'text',ph:'ישראל ישראלי',rtl:true,req:true},
+              {key:'email',label:'אימייל',type:'email',ph:'you@example.com',req:true},
+              {key:'password',label:'סיסמא',type:'password',ph:'לפחות 6 תווים',req:true},
+              {key:'confirmPassword',label:'אישור סיסמא',type:'password',ph:'הזן שוב',req:true},
+              {key:'country',label:'מדינה (רשות)',type:'text',ph:'ישראל',rtl:true},
+            ].map(f=>(
+              <div key={f.key}>
+                <label style={{...lbl,color:fieldErrors[f.key]?'#ff6b6b':'#888'}}>{f.label}{f.req&&<span style={{color:'#ff6b6b'}}> *</span>}</label>
+                <input type={f.type} style={{...inp,borderColor:fieldErrors[f.key]?'#ff6b6b40':'#1e1e2e',direction:f.rtl?'rtl':'ltr'}}
+                  placeholder={f.ph} value={form[f.key]} onChange={e=>setForm(v=>({...v,[f.key]:e.target.value}))}/>
+                {fieldErrors[f.key]&&<div style={{color:'#ff6b6b',fontSize:11,marginTop:3}}>{fieldErrors[f.key]}</div>}
+              </div>
+            ))}
+            <button className="btn" onClick={()=>{if(validateStep0())setStep(1);}}
+              style={{background:'linear-gradient(135deg,#00ff87,#00cc6a)',border:'none',borderRadius:12,color:'#000',fontSize:15,fontWeight:800,padding:'13px',cursor:'pointer',fontFamily:"'Heebo',sans-serif",marginTop:4}}>
+              המשך
+            </button>
+            <div style={{textAlign:'center',color:'#555',fontSize:13}}>
+              יש לך חשבון?{' '}
+              <button onClick={onGoLogin} style={{background:'none',border:'none',color:'#00ff87',cursor:'pointer',fontSize:13,fontFamily:"'Heebo',sans-serif",fontWeight:700}}>התחבר</button>
+            </div>
+          </div>
+        )}
+
+        {step===1&&(
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+            <div style={{color:'#fff',fontSize:17,fontWeight:800,fontFamily:"'Syne',sans-serif"}}>פרופיל מסחר</div>
+            <div style={{color:'#444',fontSize:12,marginBottom:4}}>שלב 2 מתוך 3</div>
+            <div>
+              <label style={lbl}>שנות ניסיון במסחר</label>
+              <select style={{...inp,cursor:'pointer',direction:'rtl'}} value={pref.experienceYears} onChange={e=>setPref(v=>({...v,experienceYears:e.target.value}))}>
+                <option value="">בחר...</option>
+                <option value="0">פחות משנה</option>
+                <option value="1">1–2 שנים</option>
+                <option value="3">3–5 שנים</option>
+                <option value="6">6–10 שנים</option>
+                <option value="11">מעל 10 שנים</option>
+              </select>
+            </div>
+            <div>
+              <label style={lbl}>גודל תיק משוער</label>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                {PORTFOLIO_SIZES.map(p=>(
+                  <button key={p.value} className="btn" onClick={()=>setPref(v=>({...v,portfolioSize:p.value}))}
+                    style={{padding:'10px',borderRadius:10,border:`1px solid ${pref.portfolioSize===p.value?'#00ff87':'#1e1e2e'}`,
+                      background:pref.portfolioSize===p.value?'#00ff8715':'#0d0d18',
+                      color:pref.portfolioSize===p.value?'#00ff87':'#666',fontSize:13,cursor:'pointer',fontFamily:"'Heebo',sans-serif"}}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>סגנון מסחר מועדף</label>
+              <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                {TRADING_STYLES.map(t=>(
+                  <button key={t.value} className="btn" onClick={()=>setPref(v=>({...v,tradingStyle:t.value}))}
+                    style={{padding:'10px 14px',borderRadius:10,border:`1px solid ${pref.tradingStyle===t.value?'#00ff87':'#1e1e2e'}`,
+                      background:pref.tradingStyle===t.value?'#00ff8715':'#0d0d18',
+                      display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}}>
+                    <span style={{color:pref.tradingStyle===t.value?'#00ff87':'#ccc',fontSize:14,fontFamily:"'Heebo',sans-serif",fontWeight:600}}>{t.label}</span>
+                    <span style={{color:'#555',fontSize:12,fontFamily:"'Heebo',sans-serif"}}>{t.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{display:'flex',gap:10,marginTop:4}}>
+              <button className="btn" onClick={()=>setStep(0)} style={{flex:1,padding:'13px',borderRadius:12,border:'1px solid #1a1a2e',background:'#0d0d18',color:'#666',fontSize:14,cursor:'pointer',fontFamily:"'Heebo',sans-serif",fontWeight:700}}>חזרה</button>
+              <button className="btn" onClick={()=>setStep(2)} style={{flex:2,background:'linear-gradient(135deg,#00ff87,#00cc6a)',border:'none',borderRadius:12,color:'#000',fontSize:15,fontWeight:800,padding:'13px',cursor:'pointer',fontFamily:"'Heebo',sans-serif"}}>המשך</button>
+            </div>
+          </div>
+        )}
+
+        {step===2&&(
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{color:'#fff',fontSize:17,fontWeight:800,fontFamily:"'Syne',sans-serif"}}>הצהרה משפטית</div>
+            <div style={{color:'#444',fontSize:12,marginBottom:4}}>שלב 3 מתוך 3</div>
+            <div style={{background:'#060608',border:'1px solid #1a1a2e',borderRadius:12,padding:'14px',maxHeight:110,overflowY:'auto'}}>
+              <p style={{color:'#888',fontSize:12,lineHeight:1.7}}>{LEGAL_TEXT}</p>
+            </div>
+            {[
+              {key:'terms',label:'קראתי והבנתי את תנאי השימוש'},
+              {key:'age',label:'אני מאשר/ת שאני מעל גיל 18'},
+              {key:'noAdvice',label:'אני מבין/ה שאין כאן ייעוץ השקעות'},
+            ].map(c=>(
+              <div key={c.key} className="btn" onClick={()=>setChecks(v=>({...v,[c.key]:!v[c.key]}))}
+                style={{display:'flex',alignItems:'center',gap:12,background:'#0d0d18',border:`1px solid ${checks[c.key]?'#00ff8740':'#1a1a2e'}`,borderRadius:10,padding:'12px 14px',cursor:'pointer'}}>
+                <div style={{width:20,height:20,borderRadius:6,border:`2px solid ${checks[c.key]?'#00ff87':'#333'}`,background:checks[c.key]?'#00ff87':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:12,color:'#000',fontWeight:800}}>
+                  {checks[c.key]?'✓':''}
+                </div>
+                <span style={{color:checks[c.key]?'#ccc':'#555',fontSize:13,fontFamily:"'Heebo',sans-serif"}}>{c.label}</span>
+              </div>
+            ))}
+            <div>
+              <label style={{...lbl,color:signature&&!signatureValid?'#ff6b6b':'#888'}}>חתימה דיגיטלית — הקלד/י שם מלא <span style={{color:'#ff6b6b'}}>*</span></label>
+              <input style={{...inp,borderColor:signature&&!signatureValid?'#ff6b6b40':'#1e1e2e',fontStyle:'italic',direction:'rtl'}}
+                placeholder={form.fullName||'שם מלא'} value={signature} onChange={e=>setSignature(e.target.value)}/>
+              {signature&&!signatureValid&&<div style={{color:'#ff6b6b',fontSize:11,marginTop:3}}>החתימה חייבת להתאים לשם המלא</div>}
+            </div>
+            {error&&<div style={{background:'#ff6b6b12',border:'1px solid #ff6b6b30',borderRadius:8,padding:'10px 12px',color:'#ff6b6b',fontSize:13}}>{error}</div>}
+            <div style={{display:'flex',gap:10,marginTop:4}}>
+              <button className="btn" onClick={()=>setStep(1)} style={{flex:1,padding:'13px',borderRadius:12,border:'1px solid #1a1a2e',background:'#0d0d18',color:'#666',fontSize:14,cursor:'pointer',fontFamily:"'Heebo',sans-serif",fontWeight:700}}>חזרה</button>
+              <button className="btn" onClick={submit} disabled={!canSubmit||loading}
+                style={{flex:2,background:canSubmit?'linear-gradient(135deg,#00ff87,#00cc6a)':'#1a1a2e',border:'none',borderRadius:12,color:canSubmit?'#000':'#333',fontSize:15,fontWeight:800,padding:'13px',cursor:canSubmit?'pointer':'default',fontFamily:"'Heebo',sans-serif",opacity:loading?0.7:1}}>
+                {loading?'נרשם...':'הרשמה'}
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function OnboardingScreen({onComplete}){
+  const [step,setStep]=useState(0);
+  const [details,setDetails]=useState({fullName:"",country:"",experienceYears:"",portfolioSize:"",tradingStyle:""});
+  const [nameError,setNameError]=useState(false);
+  const [checks,setChecks]=useState({terms:false,age:false,noAdvice:false});
+  const [signature,setSignature]=useState("");
+
+  const detailsValid=details.fullName.trim().length>=2;
+  const allChecked=checks.terms&&checks.age&&checks.noAdvice;
+  const signatureValid=signature.trim().toLowerCase()===details.fullName.trim().toLowerCase()&&signature.trim().length>=2;
+  const canSubmit=allChecked&&signatureValid;
+
+  function goToStep2(){
+    if(!detailsValid){setNameError(true);return;}
+    setNameError(false);
+    setStep(1);
+  }
+
+  function submit(){
+    if(!canSubmit) return;
+    const data={...details,fullName:details.fullName.trim(),signature:signature.trim(),agreedAt:new Date().toISOString()};
+    onComplete(data);
+  }
+
+  const inputStyle={width:"100%",background:"#0d0d18",border:"1px solid #1e1e2e",borderRadius:10,padding:"11px 14px",color:"#fff",fontSize:14,fontFamily:"'Heebo',sans-serif",outline:"none",direction:"rtl"};
+  const labelStyle={color:"#888",fontSize:12,marginBottom:5,display:"block"};
+
+  return(
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#060608",direction:"rtl",fontFamily:"'Heebo',sans-serif",padding:24,overflowY:"auto"}}>
+      <style>{CSS}</style>
+
+      {/* Logo */}
+      <div style={{marginBottom:32,textAlign:"center"}}>
+        <div style={{width:52,height:52,background:"linear-gradient(135deg,#00ff87,#00cc6a)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:"#000",fontFamily:"'Syne',sans-serif",margin:"0 auto 12px"}}>TO</div>
+        <div style={{color:"#fff",fontSize:22,fontWeight:800,fontFamily:"'Syne',sans-serif",letterSpacing:2}}>TRADEOS</div>
+        <div style={{color:"#555",fontSize:12,marginTop:4}}>הרשמה לפלטפורמה</div>
+      </div>
+
+      {/* Step indicators */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:28}}>
+        {[0,1].map(i=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,
+              background:step===i?"linear-gradient(135deg,#00ff87,#00cc6a)":step>i?"#00cc6a30":"#0d0d18",
+              color:step===i?"#000":step>i?"#00cc6a":"#333",
+              border:`1px solid ${step===i?"transparent":step>i?"#00cc6a40":"#1a1a2e"}`}}>
+              {step>i?"✓":i+1}
+            </div>
+            <span style={{fontSize:12,color:step===i?"#fff":step>i?"#00cc6a":"#333"}}>
+              {i===0?"פרטים אישיים":"הצהרה משפטית"}
+            </span>
+            {i<1&&<div style={{width:24,height:1,background:"#1a1a2e"}}/>}
+          </div>
+        ))}
+      </div>
+
+      {step===0&&(
+        <div style={{background:"#0a0a12",border:"1px solid #1a1a2e",borderRadius:20,padding:"28px 24px",maxWidth:460,width:"100%"}}>
+          <div style={{color:"#fff",fontSize:18,fontWeight:700,marginBottom:4,fontFamily:"'Syne',sans-serif"}}>פרטים אישיים</div>
+          <div style={{color:"#444",fontSize:12,marginBottom:24}}>שלב 1 מתוך 2</div>
+
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <div>
+              <label style={{...labelStyle,color:nameError?"#ff6b6b":"#888"}}>שם מלא <span style={{color:"#ff6b6b"}}>*</span></label>
+              <input style={{...inputStyle,borderColor:nameError?"#ff6b6b40":"#1e1e2e"}}
+                placeholder="ישראל ישראלי"
+                value={details.fullName}
+                onChange={e=>{setDetails(d=>({...d,fullName:e.target.value}));if(nameError)setNameError(false);}}
+              />
+              {nameError&&<div style={{color:"#ff6b6b",fontSize:11,marginTop:4}}>שם מלא הוא שדה חובה</div>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>מדינה</label>
+              <input style={inputStyle} placeholder="ישראל" value={details.country}
+                onChange={e=>setDetails(d=>({...d,country:e.target.value}))}/>
+            </div>
+
+            <div>
+              <label style={labelStyle}>שנות ניסיון במסחר</label>
+              <select style={{...inputStyle,cursor:"pointer"}}
+                value={details.experienceYears}
+                onChange={e=>setDetails(d=>({...d,experienceYears:e.target.value}))}>
+                <option value="">בחר...</option>
+                <option value="0">פחות משנה</option>
+                <option value="1">1–2 שנים</option>
+                <option value="3">3–5 שנים</option>
+                <option value="6">6–10 שנים</option>
+                <option value="11">מעל 10 שנים</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>גודל תיק משוער</label>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {PORTFOLIO_SIZES.map(p=>(
+                  <button key={p.value} className="btn" onClick={()=>setDetails(d=>({...d,portfolioSize:p.value}))}
+                    style={{padding:"10px",borderRadius:10,border:`1px solid ${details.portfolioSize===p.value?"#00ff87":"#1e1e2e"}`,
+                      background:details.portfolioSize===p.value?"#00ff8715":"#0d0d18",
+                      color:details.portfolioSize===p.value?"#00ff87":"#666",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>סגנון מסחר</label>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {TRADING_STYLES.map(ts=>(
+                  <button key={ts.value} className="btn" onClick={()=>setDetails(d=>({...d,tradingStyle:ts.value}))}
+                    style={{padding:"10px 8px",borderRadius:10,border:`1px solid ${details.tradingStyle===ts.value?"#00ff87":"#1e1e2e"}`,
+                      background:details.tradingStyle===ts.value?"#00ff8715":"#0d0d18",
+                      color:details.tradingStyle===ts.value?"#00ff87":"#666",fontSize:13,cursor:"pointer",fontFamily:"'Heebo',sans-serif",textAlign:"center"}}>
+                    <div style={{fontWeight:600}}>{ts.label}</div>
+                    <div style={{fontSize:10,opacity:.7,marginTop:2}}>{ts.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button className="btn" onClick={goToStep2}
+            style={{marginTop:24,width:"100%",padding:"13px",borderRadius:12,border:"none",
+              background:detailsValid?"linear-gradient(135deg,#00ff87,#00cc6a)":"#0d0d18",
+              color:detailsValid?"#000":"#333",fontSize:15,fontWeight:800,cursor:detailsValid?"pointer":"default",
+              fontFamily:"'Heebo',sans-serif",transition:"all .2s"}}>
+            המשך לשלב 2 ›
+          </button>
+        </div>
+      )}
+
+      {step===1&&(
+        <div style={{background:"#0a0a12",border:"1px solid #1a1a2e",borderRadius:20,padding:"28px 24px",maxWidth:460,width:"100%"}}>
+          <div style={{color:"#fff",fontSize:18,fontWeight:700,marginBottom:4,fontFamily:"'Syne',sans-serif"}}>הצהרה משפטית</div>
+          <div style={{color:"#444",fontSize:12,marginBottom:20}}>שלב 2 מתוך 2 — קרא בעיון</div>
+
+          {/* Legal text box */}
+          <div style={{background:"#070710",border:"1px solid #ff6b6b25",borderRadius:12,padding:"16px",marginBottom:20,color:"#aaa",fontSize:13,lineHeight:1.9,direction:"rtl"}}>
+            {LEGAL_TEXT}
+          </div>
+
+          {/* Checkboxes */}
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+            {[
+              {key:"terms",  label:"קראתי והבנתי את תנאי השימוש"},
+              {key:"age",    label:"אני מאשר שאני מעל גיל 18"},
+              {key:"noAdvice",label:"אני מבין שהמערכת אינה מספקת ייעוץ פיננסי"},
+            ].map(cb=>(
+              <label key={cb.key} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",userSelect:"none"}}>
+                <div onClick={()=>setChecks(c=>({...c,[cb.key]:!c[cb.key]}))}
+                  style={{width:20,height:20,borderRadius:6,border:`1px solid ${checks[cb.key]?"#00ff87":"#2a2a3e"}`,
+                    background:checks[cb.key]?"#00ff87":"transparent",display:"flex",alignItems:"center",justifyContent:"center",
+                    flexShrink:0,transition:"all .15s",cursor:"pointer"}}>
+                  {checks[cb.key]&&<span style={{color:"#000",fontSize:12,fontWeight:900}}>✓</span>}
+                </div>
+                <span style={{color:checks[cb.key]?"#ccc":"#666",fontSize:13}}>{cb.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Signature field */}
+          <div style={{marginBottom:20}}>
+            <label style={{...labelStyle,color:"#888"}}>
+              חתימה דיגיטלית — הקלד את שמך המלא לאישור
+            </label>
+            <input style={{...inputStyle,borderColor:signature&&signatureValid?"#00ff8760":signature&&!signatureValid?"#ff6b6b40":"#1e1e2e"}}
+              placeholder={details.fullName||"שמך המלא"}
+              value={signature}
+              onChange={e=>setSignature(e.target.value)}
+            />
+            {signature&&!signatureValid&&(
+              <div style={{color:"#ff6b6b",fontSize:11,marginTop:4}}>החתימה חייבת להתאים לשם המלא שהזנת</div>
+            )}
+            {signature&&signatureValid&&(
+              <div style={{color:"#00ff87",fontSize:11,marginTop:4}}>החתימה אומתה</div>
+            )}
+          </div>
+
+          <div style={{display:"flex",gap:10}}>
+            <button className="btn" onClick={()=>setStep(0)}
+              style={{padding:"13px 16px",borderRadius:12,border:"1px solid #1a1a2e",background:"#0d0d18",
+                color:"#555",fontSize:14,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>
+              ‹ חזור
+            </button>
+            <button className="btn" onClick={submit}
+              style={{flex:1,padding:"13px",borderRadius:12,border:"none",
+                background:canSubmit?"linear-gradient(135deg,#00ff87,#00cc6a)":"#0d0d18",
+                color:canSubmit?"#000":"#333",fontSize:14,fontWeight:800,
+                cursor:canSubmit?"pointer":"default",fontFamily:"'Heebo',sans-serif",transition:"all .2s"}}>
+              אני מסכים — כניסה למערכת
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CANDLESTICK GUIDE
+// ══════════════════════════════════════════════════════════════════════
+const CANDLES = [
+  {
+    he:"דוג'י",en:"Doji",
+    meaning:"אי-החלטיות בשוק — קונים ומוכרים מאוזנים. לרוב מסמן היפוך אפשרי.",
+    signal:"המתנה",signalColor:"#ffd93d",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <line x1="20" y1="5" x2="20" y2="75" stroke="#aaa" strokeWidth="1.5"/>
+        <rect x="8" y="37" width="24" height="6" rx="1" fill="none" stroke="#ffd93d" strokeWidth="2"/>
+      </svg>
+    ),
+  },
+  {
+    he:"פטיש",en:"Hammer",
+    meaning:"לאחר ירידה — המוכרים ניסו לדחוף מחיר מטה אך הקונים החזירו. סימן היפוך שורי.",
+    signal:"קנייה",signalColor:"#00ff87",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <line x1="20" y1="5" x2="20" y2="22" stroke="#aaa" strokeWidth="1.5"/>
+        <rect x="8" y="22" width="24" height="18" rx="2" fill="#00ff8733" stroke="#00ff87" strokeWidth="2"/>
+        <line x1="20" y1="40" x2="20" y2="75" stroke="#00ff87" strokeWidth="2"/>
+      </svg>
+    ),
+  },
+  {
+    he:"כוכב ערב",en:"Evening Star",
+    meaning:"תבנית שלושה נרות — עצירת עלייה והיפוך דובי. מהימן ביותר לשורטים.",
+    signal:"מכירה",signalColor:"#ff6b6b",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <rect x="10" y="50" width="20" height="22" rx="2" fill="#ff6b6b33" stroke="#ff6b6b" strokeWidth="2"/>
+        <rect x="14" y="32" width="12" height="14" rx="2" fill="#ffd93d33" stroke="#ffd93d" strokeWidth="1.5"/>
+        <rect x="10" y="8" width="20" height="20" rx="2" fill="#00ff8733" stroke="#00ff87" strokeWidth="2"/>
+        <line x1="20" y1="5" x2="20" y2="8" stroke="#aaa" strokeWidth="1.5"/>
+        <line x1="20" y1="72" x2="20" y2="75" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    he:"כוכב בוקר",en:"Morning Star",
+    meaning:"תבנית שלושה נרות — עצירת ירידה והיפוך שורי. אחד הסיגנלים האמינים ביותר.",
+    signal:"קנייה",signalColor:"#00ff87",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <rect x="10" y="8" width="20" height="22" rx="2" fill="#ff6b6b33" stroke="#ff6b6b" strokeWidth="2"/>
+        <rect x="14" y="34" width="12" height="14" rx="2" fill="#ffd93d33" stroke="#ffd93d" strokeWidth="1.5"/>
+        <rect x="10" y="52" width="20" height="20" rx="2" fill="#00ff8733" stroke="#00ff87" strokeWidth="2"/>
+        <line x1="20" y1="5" x2="20" y2="8" stroke="#aaa" strokeWidth="1.5"/>
+        <line x1="20" y1="72" x2="20" y2="75" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    he:"מעטפה שורית",en:"Bullish Engulfing",
+    meaning:"נר ירוק גדול בולע לחלוטין נר אדום קודם — מומנטום קנייה חזק.",
+    signal:"קנייה",signalColor:"#00ff87",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <rect x="13" y="28" width="14" height="20" rx="2" fill="#ff6b6b33" stroke="#ff6b6b" strokeWidth="1.5"/>
+        <rect x="8" y="18" width="24" height="40" rx="2" fill="#00ff8733" stroke="#00ff87" strokeWidth="2"/>
+        <line x1="20" y1="5" x2="20" y2="18" stroke="#aaa" strokeWidth="1.5"/>
+        <line x1="20" y1="58" x2="20" y2="74" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    he:"מעטפה דובית",en:"Bearish Engulfing",
+    meaning:"נר אדום גדול בולע נר ירוק קודם — מומנטום מכירה חזק.",
+    signal:"מכירה",signalColor:"#ff6b6b",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <rect x="13" y="30" width="14" height="20" rx="2" fill="#00ff8733" stroke="#00ff87" strokeWidth="1.5"/>
+        <rect x="8" y="18" width="24" height="42" rx="2" fill="#ff6b6b33" stroke="#ff6b6b" strokeWidth="2"/>
+        <line x1="20" y1="5" x2="20" y2="18" stroke="#aaa" strokeWidth="1.5"/>
+        <line x1="20" y1="60" x2="20" y2="74" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    he:"הראשון חודר",en:"Piercing Line",
+    meaning:"נר ירוק נפתח מתחת לשפל אך סוגר מעל אמצע הנר האדום — היפוך שורי.",
+    signal:"קנייה",signalColor:"#00ff87",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <rect x="10" y="8" width="18" height="28" rx="2" fill="#ff6b6b33" stroke="#ff6b6b" strokeWidth="2"/>
+        <rect x="12" y="30" width="18" height="30" rx="2" fill="#00ff8733" stroke="#00ff87" strokeWidth="2"/>
+        <line x1="19" y1="5" x2="19" y2="8" stroke="#aaa" strokeWidth="1.5"/>
+        <line x1="21" y1="60" x2="21" y2="74" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    he:"עיפרון",en:"Shooting Star",
+    meaning:"גוף קטן עם צל עליון ארוך מאוד — הקונים נכשלו, סיגנל היפוך דובי.",
+    signal:"מכירה",signalColor:"#ff6b6b",
+    svg:(
+      <svg viewBox="0 0 40 80" width={40} height={80}>
+        <line x1="20" y1="6" x2="20" y2="52" stroke="#ff6b6b" strokeWidth="2"/>
+        <rect x="8" y="52" width="24" height="16" rx="2" fill="#ff6b6b33" stroke="#ff6b6b" strokeWidth="2"/>
+        <line x1="20" y1="68" x2="20" y2="74" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+];
+
 export default function App(){
   const [tab,setTab]=useState("scanner");
-  const [modal,setModal]=useState(null); // profile|sizer|circuit|journal|positions|coach|mental|earnings|econ|news|glossary|decision|insights
+  const [modal,setModal]=useState(null); // profile|sizer|circuit|journal|positions|coach|mental|earnings|econ|news|glossary|decision|insights|candles
+  const [searchQuery,setSearchQuery]=useState("");
+  const [analysisStock,setAnalysisStock]=useState(null);
+  const [appTrades,setAppTrades]=useState([]);
+  const [authUser,setAuthUser]=useState(null);
+  const [authChecked,setAuthChecked]=useState(false);
+  const [authScreen,setAuthScreen]=useState('login');
 
   // Load saved onboarding answers
   const savedOnboarding=()=>{try{const v=localStorage.getItem(ONBOARDING_KEY);return v?JSON.parse(v):null;}catch{return null;}};
   const [onboarding,setOnboarding]=useState(()=>savedOnboarding());
 
   function buildProfileFromOnboarding(answers){
-    const portfolioMap={small:8000,medium:30000,large:100000};
-    const styleMap={swing:"swing",daily:"day",both:"swing"};
+    const portfolioMap={small:8000,medium:30000,large:100000,xlarge:250000};
+    const styleMap={swing:"swing",daily:"day",both:"swing",position:"swing"};
+    const yrs=parseInt(answers.experienceYears)||0;
+    const expLevel=yrs>=6?"professional":yrs>=3?"advanced":"beginner";
     return {
-      name:"סוחר",
+      name:answers.fullName||"סוחר",
       portfolio:portfolioMap[answers.portfolioSize]||50000,
-      riskPerTrade:answers.experience==="beginner"?1:answers.experience==="professional"?2:1.5,
-      maxDailyLoss:answers.experience==="beginner"?2:3,
+      riskPerTrade:expLevel==="beginner"?1:expLevel==="professional"?2:1.5,
+      maxDailyLoss:expLevel==="beginner"?2:3,
       style:styleMap[answers.tradingStyle]||"swing",
-      experience:answers.experience||"intermediate",
+      experience:expLevel,
       portfolioSize:answers.portfolioSize||"medium",
       tradingStyle:answers.tradingStyle||"both",
     };
@@ -2270,14 +3039,18 @@ export default function App(){
   const [tradeLocked,setTradeLocked]=useState(false);
   const [lockReason,setLockReason]=useState(null);
   const [showUnlockConfirm,setShowUnlockConfirm]=useState(false);
-  const todayPnl=-320; const tradeCount=3; const lastTradeTime=Date.now()-8*60000;
+  const todayStr=new Date().toISOString().split('T')[0];
+  const todayTrades=appTrades.filter(t=>t.date===todayStr||t.date?.startsWith(todayStr));
+  const todayPnl=todayTrades.reduce((a,t)=>a+(parseFloat(t.pnl)||0),0);
+  const tradeCount=todayTrades.length;
+  const lastTradeTime=todayTrades.length>0?new Date(todayTrades[0].created_at||Date.now()).getTime():Date.now()-8*60000;
   const TOP=ALL_STOCKS.reduce((a,b)=>a.total>b.total?a:b);
-  const emotional=calcEmotionalScore(tradeCount,SAMPLE_TRADES);
+  const emotional=calcEmotionalScore(tradeCount,appTrades);
   const showRevWarning=emotional.state==="revenge"&&!revWarnDismissed;
 
   useEffect(()=>{
     if(tradeLocked) return;
-    const sorted=[...SAMPLE_TRADES].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const sorted=[...appTrades].sort((a,b)=>new Date(b.date)-new Date(a.date));
     let consecutive=0;
     for(const t of sorted){if(t.result==="loss")consecutive++;else break;}
     if(consecutive>=3){
@@ -2291,12 +3064,72 @@ export default function App(){
       setTradeLocked(true);
       setLockReason(`חריגה מהפסד יומי — $${Math.abs(todayPnl)} מתוך $${maxLoss.toFixed(0)}`);
     }
-  },[profile,tradeLocked]);
+  },[profile,tradeLocked,appTrades]);
 
   const lockManually=()=>{
     setTradeLocked(true);
     setLockReason("נעילה ידנית על ידי הסוחר");
   };
+
+  useEffect(()=>{
+    const token=localStorage.getItem(TOKEN_KEY);
+    if(!token){setAuthChecked(true);return;}
+    fetch(`${AUTH_API}/api/auth/me`,{headers:{Authorization:`Bearer ${token}`}})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.user){
+          setAuthUser(d.user);
+          if(!localStorage.getItem(ONBOARDING_KEY)&&(d.user.experience||d.user.portfolio_size)){
+            const ans={fullName:d.user.full_name,country:d.user.country||'',experienceYears:d.user.experience||'0',portfolioSize:d.user.portfolio_size||'medium',tradingStyle:d.user.trading_style||'both',signature:'',agreedAt:d.user.created_at||new Date().toISOString()};
+            try{localStorage.setItem(ONBOARDING_KEY,JSON.stringify(ans));}catch{}
+            setOnboarding(ans);
+            setProfile(buildProfileFromOnboarding(ans));
+          }
+        }else{localStorage.removeItem(TOKEN_KEY);}
+      })
+      .catch(()=>localStorage.removeItem(TOKEN_KEY))
+      .finally(()=>setAuthChecked(true));
+  },[]);
+
+  useEffect(()=>{
+    if(!authUser)return;
+    apiCall('/api/trades').then(r=>r.json()).then(d=>{if(Array.isArray(d))setAppTrades(d.map(normalizeTrade));}).catch(()=>{});
+    apiCall('/api/settings').then(r=>r.json()).then(s=>{
+      if(s&&s.user_id){
+        setProfile(prev=>({...prev,
+          portfolio:parseFloat(s.portfolio)||prev.portfolio,
+          riskPerTrade:parseFloat(s.risk_per_trade)||prev.riskPerTrade,
+          maxDailyLoss:parseFloat(s.max_daily_loss)||prev.maxDailyLoss,
+          style:s.style||prev.style,
+          experience:s.experience||prev.experience,
+        }));
+      }
+    }).catch(()=>{});
+  },[authUser]);
+
+  function handleLoginSuccess(token,user){
+    localStorage.setItem(TOKEN_KEY,token);
+    setAuthUser(user);
+    if(!localStorage.getItem(ONBOARDING_KEY)&&(user.experience||user.portfolio_size)){
+      const ans={fullName:user.full_name,country:user.country||'',experienceYears:user.experience||'0',portfolioSize:user.portfolio_size||'medium',tradingStyle:user.trading_style||'both',signature:'',agreedAt:user.created_at||new Date().toISOString()};
+      try{localStorage.setItem(ONBOARDING_KEY,JSON.stringify(ans));}catch{}
+      setOnboarding(ans);
+      setProfile(buildProfileFromOnboarding(ans));
+    }
+  }
+
+  function handleRegister(token,user,answers){
+    localStorage.setItem(TOKEN_KEY,token);
+    try{localStorage.setItem(ONBOARDING_KEY,JSON.stringify(answers));}catch{}
+    setAuthUser(user);
+    setOnboarding(answers);
+    setProfile(buildProfileFromOnboarding(answers));
+  }
+
+  function handleLogout(){
+    localStorage.removeItem(TOKEN_KEY);
+    setAuthUser(null);
+  }
 
   const openModal=(m)=>setModal(m);
   const closeModal=()=>setModal(null);
@@ -2307,15 +3140,16 @@ export default function App(){
     setProfile(buildProfileFromOnboarding(answers));
   }
 
-  // Show onboarding if not completed
+  if(!authChecked) return <div style={{minHeight:'100vh',background:'#060608',display:'flex',alignItems:'center',justifyContent:'center'}}><style>{CSS}</style><div style={{color:'#00ff87',fontSize:14,fontFamily:"'Heebo',sans-serif",letterSpacing:1}}>טוען...</div></div>;
+  if(!authUser) return authScreen==='register'?<RegisterScreen onRegister={handleRegister} onGoLogin={()=>setAuthScreen('login')}/>:<LoginScreen onLogin={handleLoginSuccess} onGoRegister={()=>setAuthScreen('register')}/>;
   if(!onboarding) return <OnboardingScreen onComplete={completeOnboarding}/>;
 
   return(
-    <div style={{height:"100vh",display:"flex",flexDirection:"column",background:"#060608",direction:"rtl",fontFamily:"'Heebo',sans-serif",overflow:"hidden"}}>
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#060608",direction:"rtl",fontFamily:"'Heebo',sans-serif",overflowY:"auto"}}>
       <style>{CSS}</style>
 
       {/* Top Bar */}
-      <div style={{background:"#0a0a12",borderBottom:"1px solid #1a1a2e",padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+      <div style={{position:"sticky",top:0,zIndex:100,background:"#0a0a12",borderBottom:"1px solid #1a1a2e",padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:32,height:32,background:"linear-gradient(135deg,#00ff87,#00cc6a)",borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#000",fontFamily:"'Syne',sans-serif"}}>TO</div>
           <div>
@@ -2324,10 +3158,10 @@ export default function App(){
               {profile?.experience&&(()=>{
                 const lv={beginner:{label:"מתחיל",c:"#ffd93d",bg:"#ffd93d18"},advanced:{label:"מתקדם",c:"#00ff87",bg:"#00ff8718"},professional:{label:"מקצועי",c:"#a78bfa",bg:"#a78bfa18"}};
                 const l=lv[profile.experience]||lv.advanced;
-                return <span style={{background:l.bg,border:`1px solid ${l.c}40`,borderRadius:6,color:l.c,fontSize:10,padding:"2px 7px",fontWeight:600,fontFamily:"'Heebo',sans-serif"}}>{l.label}</span>;
+                return <span style={{background:l.bg,border:`1px solid ${l.c}40`,borderRadius:6,color:l.c,fontSize:13,padding:"2px 7px",fontWeight:600,fontFamily:"'Heebo',sans-serif"}}>{l.label}</span>;
               })()}
             </div>
-            {profile?.name&&<div style={{color:"#333",fontSize:11,marginTop:1}}>{profile.name}</div>}
+            {profile?.name&&<div style={{color:"#888",fontSize:13,marginTop:1}}>{profile.name}</div>}
           </div>
         </div>
         <div style={{display:"flex",gap:6}}>
@@ -2335,18 +3169,19 @@ export default function App(){
           <button className="btn" onClick={()=>openModal("circuit")} style={{background:circuitLocked?"#ff6b6b20":"#0d0d18",border:`1px solid ${circuitLocked?"#ff6b6b40":"#1a1a2e"}`,borderRadius:10,color:circuitLocked?"#ff6b6b":"#555",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>🛡️</button>
           <button className="btn" onClick={()=>openModal("mental")} style={{background:"#ffd93d15",border:"1px solid #ffd93d30",borderRadius:10,color:"#ffd93d",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>🧠</button>
           <button className="btn" onClick={()=>openModal("coach")} style={{background:"#a78bfa15",border:"1px solid #a78bfa30",borderRadius:10,color:"#a78bfa",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>🤖</button>
-          <button className="btn" title="שנה פרופיל" onClick={()=>{try{localStorage.removeItem(ONBOARDING_KEY);}catch{}setOnboarding(null);}} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:10,color:"#444",padding:"7px 10px",fontSize:12,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>⚙</button>
+          <button className="btn" title="שנה פרופיל" onClick={()=>{try{localStorage.removeItem(ONBOARDING_KEY);}catch{}setOnboarding(null);}} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:10,color:"#999",padding:"7px 10px",fontSize:12,cursor:"pointer",fontFamily:"'Heebo',sans-serif"}}>⚙</button>
           <button className="btn" onClick={()=>openModal("profile")} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:10,color:"#666",padding:"7px 10px",fontSize:14,cursor:"pointer"}}>👤</button>
+          <button className="btn" onClick={handleLogout} title="התנתק" style={{background:"#ff6b6b15",border:"1px solid #ff6b6b30",borderRadius:10,color:"#ff6b6b",padding:"7px 10px",fontSize:12,cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>יציאה</button>
         </div>
       </div>
 
       {/* Quick Access Bar */}
-      <div style={{background:"#080810",borderBottom:"1px solid #111",padding:"10px 20px",display:"flex",gap:8,overflowX:"auto",flexShrink:0}}>
+      <div style={{position:"sticky",top:56,zIndex:100,background:"#080810",borderBottom:"1px solid #111",padding:"10px 20px",display:"flex",gap:8,overflowX:"auto",flexShrink:0}}>
         {[
           {icon:"🎯",label:"החלטה",modal:"decision",color:"#00ff87"},
           {icon:"📈",label:"פוזיציות",modal:"positions",color:"#00ff87"},
           {icon:"📰",label:"חדשות",modal:"news",color:"#e879f9",alert:NEWS_DB.filter(n=>n.sent==="negative"&&n.mins<60).length>0},
-          {icon:"📐",label:"Position Size",modal:"sizer",color:"#ffd93d"},
+          {icon:"📐",label:"גודל פוזיציה",modal:"sizer",color:"#ffd93d"},
           {icon:"📅",label:"דיווחים",modal:"earnings",color:"#fb923c",alert:EARNINGS_DATA.map(e=>({...e,days:daysUntil(e.date)})).filter(e=>e.days>=0&&e.days<3).length>0},
           {icon:"🌐",label:"כלכלה",modal:"econ",color:"#38bdf8",alert:ECON_EVENTS.map(e=>({...e,days:daysUntil(e.date)})).filter(e=>e.days>=0&&e.days<2&&e.impact==="high").length>0},
           {icon:"📋",label:"יומן",modal:"journal",color:"#ffd93d"},
@@ -2354,6 +3189,7 @@ export default function App(){
           {icon:"🗺️",label:"סקטורים",modal:"heatmap",color:"#38bdf8"},
           {icon:"📖",label:"מילון",modal:"glossary",color:"#a78bfa"},
           {icon:"🛡️",label:"הגנות",modal:"circuit",color:"#ff6b6b"},
+          {icon:"🕯️",label:"נרות",modal:"candles",color:"#fb923c"},
         ].map(({icon,label,modal:m,color,alert})=>(
           <button key={m} className="btn" onClick={()=>openModal(m)} style={{display:"flex",alignItems:"center",gap:6,background:"#0d0d18",border:`1px solid ${alert?"#ff6b6b40":"#1a1a2e"}`,borderRadius:12,color,padding:"8px 14px",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,fontFamily:"'Heebo',sans-serif",fontWeight:600,position:"relative"}}>
             <span>{icon}</span><span>{label}</span>
@@ -2364,9 +3200,6 @@ export default function App(){
 
       {/* Fear & Greed */}
       <FearGreedMeter/>
-
-      {/* Trade Lock Banner */}
-      {tradeLocked&&<TradeLockBanner reason={lockReason} onUnlockRequest={()=>setShowUnlockConfirm(true)}/>}
 
       {/* Morning pill */}
       <div style={{margin:"8px 20px 0",background:"linear-gradient(135deg,#0a1a0a,#060608)",border:"1px solid #00ff8725",borderRadius:12,padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
@@ -2385,26 +3218,63 @@ export default function App(){
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <span style={{fontSize:18}}>🧬</span>
           <div>
-            <div style={{color:"#555",fontSize:10,marginBottom:2,letterSpacing:.5}}>EMOTIONAL SCORE · ציון רגשי</div>
+            <div style={{color:"#555",fontSize:13,marginBottom:2,letterSpacing:.5}}>EMOTIONAL SCORE · ציון רגשי</div>
             <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
               <EmotionalBadge state={emotional.state}/>
-              <span style={{color:"#444",fontSize:10,fontFamily:"'Heebo',sans-serif"}}>{emotional.consecutive} הפסד{emotional.consecutive!==1?"ות":""} ברצף · {tradeCount} עסקאות היום</span>
+              <span style={{color:"#999",fontSize:13,fontFamily:"'Heebo',sans-serif"}}>{emotional.consecutive} הפסד{emotional.consecutive!==1?"ות":""} ברצף · {tradeCount} עסקאות היום</span>
             </div>
           </div>
         </div>
-        <div style={{color:EMOTIONAL_CFG[emotional.state].color,fontSize:10,fontFamily:"'Heebo',sans-serif",textAlign:"left",maxWidth:90,lineHeight:1.4,opacity:.85}}>{EMOTIONAL_CFG[emotional.state].tip}</div>
+        <div style={{color:EMOTIONAL_CFG[emotional.state].color,fontSize:13,fontFamily:"'Heebo',sans-serif",textAlign:"left",maxWidth:90,lineHeight:1.4,opacity:.85}}>{EMOTIONAL_CFG[emotional.state].tip}</div>
       </div>
 
       {/* AI Pre-Trade Coach */}
       <PreTradeAdvisor emotional={emotional} tradeCount={tradeCount} todayPnl={todayPnl} profile={profile}/>
 
+      {/* Alerts Panel */}
+      <AlertsPanel stocks={ALL_STOCKS} earningsData={EARNINGS_DATA} todayPnl={todayPnl} profile={profile}/>
+
+      {/* Search Bar */}
+      {(()=>{
+        const sq=searchQuery.trim().toUpperCase();
+        const knownMatch=sq&&ALL_STOCKS.find(s=>s.symbol===sq||s.name.toUpperCase().includes(sq));
+        const isUnknown=sq&&!knownMatch;
+        return(
+          <div style={{margin:"8px 14px 0",direction:"rtl"}}>
+            <div style={{position:"relative",display:"flex",alignItems:"center"}}>
+              <input
+                value={searchQuery}
+                onChange={e=>setSearchQuery(e.target.value.toUpperCase())}
+                placeholder="🔍 חפש מניה... TSLA / NVDA / AMD"
+                style={{width:"100%",background:"#0d0d18",border:"2px solid #00ff8740",borderRadius:14,padding:"12px 44px 12px 16px",fontSize:14,color:"#fff",fontFamily:"'IBM Plex Mono',monospace",outline:"none",direction:"ltr",letterSpacing:1}}
+              />
+              {sq&&(
+                <button onClick={()=>setSearchQuery("")} style={{position:"absolute",left:12,background:"none",border:"none",color:"#888",fontSize:16,cursor:"pointer",padding:4}}>✕</button>
+              )}
+            </div>
+            {isUnknown&&(
+              <div style={{marginTop:8,background:"#1a1a2e",border:"1px solid #2a2a3e",borderRadius:12,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{color:"#888",fontSize:13}}>"{sq}" אינה ברשימת המניות</span>
+                <button onClick={()=>setAnalysisStock(sq)} style={{background:"#a78bfa20",border:"1px solid #a78bfa40",borderRadius:8,color:"#a78bfa",fontSize:13,padding:"6px 12px",cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>נתח עם AI 🤖</button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Scanner */}
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",marginTop:8}}>
-        <Scanner experience={profile.experience}/>
+      <div style={{display:"flex",flexDirection:"column",marginTop:4}}>
+        <Scanner experience={profile.experience} searchQuery={searchQuery} onAnalyze={(sym)=>setAnalysisStock(sym)}/>
+      </div>
+
+      {/* Disclaimer footer */}
+      <div style={{background:"#0a0a0a",borderTop:"1px solid #1a1a2e",padding:"8px 20px",textAlign:"center",flexShrink:0}}>
+        <span style={{color:"#444",fontSize:11,fontFamily:"'Heebo',sans-serif"}}>⚠️ המידע המוצג לצרכי מחקר בלבד ואינו מהווה ייעוץ פיננסי. כל החלטת השקעה באחריות המשתמש בלבד.</span>
       </div>
 
       {/* Modals */}
-      {modal==="profile"&&<TraderProfile profile={profile} onSave={(p)=>{setProfile(p);closeModal();}} onClose={closeModal}/>}
+      {analysisStock&&<StockAnalysisScreen symbol={analysisStock} onClose={()=>setAnalysisStock(null)} onOpenSizer={(sym)=>{setAnalysisStock(null);openModal("sizer");}} onOpenJournal={(sym)=>{setAnalysisStock(null);openModal("journal");}}/>}
+      {modal==="profile"&&<TraderProfile profile={profile} onSave={async(p)=>{setProfile(p);closeModal();try{await apiCall('/api/settings',{method:'PUT',body:JSON.stringify({portfolio:p.portfolio,risk_per_trade:p.riskPerTrade,max_daily_loss:p.maxDailyLoss,style:p.style,experience:p.experience})});}catch{}}} onClose={closeModal}/>}
       {modal==="sizer"&&<PositionSizer profile={profile} onClose={closeModal}/>}
       {modal==="circuit"&&<CircuitBreaker profile={profile} todayPnl={todayPnl} tradeCount={tradeCount} lastTradeTime={lastTradeTime} locked={circuitLocked} onUnlock={()=>setCircuitLocked(false)} onClose={closeModal}/>}
       {modal==="journal"&&<JournalAnalytics onClose={closeModal}/>}
@@ -2417,6 +3287,7 @@ export default function App(){
       {modal==="glossary"&&<GlossaryScreen onClose={closeModal}/>}
       {modal==="decision"&&<TradeDecisionEngine onClose={closeModal}/>}
       {modal==="insights"&&<PerformanceInsights onClose={closeModal}/>}
+      {modal==="candles"&&<CandlestickGuide onClose={closeModal}/>}
       {/* Revenge Trading Warning Overlay */}
       {showRevWarning&&(
         <div style={{position:"fixed",inset:0,background:"#000000cc",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,direction:"rtl",fontFamily:"'Heebo',sans-serif"}}>
@@ -2455,7 +3326,7 @@ export default function App(){
               <div style={{color:"#888",fontSize:13,marginTop:8,lineHeight:1.6}}>הנעילה הופעלה להגנה על ההון שלך.<br/>האם אתה בטוח שברצונך לפתוח?</div>
             </div>
             <div style={{background:"#ff6b6b12",border:"1px solid #ff6b6b35",borderRadius:12,padding:"12px 14px",marginBottom:20}}>
-              <div style={{color:"#ff6b6b",fontSize:11,fontWeight:700,marginBottom:4}}>סיבת הנעילה:</div>
+              <div style={{color:"#ff6b6b",fontSize:13,fontWeight:700,marginBottom:4}}>סיבת הנעילה:</div>
               <div style={{color:"#ff6b6b",fontSize:12,opacity:.9,lineHeight:1.5}}>{lockReason}</div>
             </div>
             <div style={{display:"flex",gap:10}}>
