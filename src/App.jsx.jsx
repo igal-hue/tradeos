@@ -2168,8 +2168,7 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
 
         {/* Block 0: TradingView Chart */}
         <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,overflow:"hidden",marginBottom:12,minHeight:400}}>
-          <div style={{color:'red',fontSize:'20px'}}>CHART AREA</div>
-          <TVChart symbol={sym}/>
+          <TVChart symbol={sym} />
         </div>
 
         {/* Block 1: Technical */}
