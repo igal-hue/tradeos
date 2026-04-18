@@ -922,60 +922,48 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
       )}
       <div style={{padding:"0 12px 20px"}}>
         {filtered.map((s,i)=>(
-          <div key={s.symbol} className="row" onClick={()=>setSel(s===sel?null:s)} style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 130px 52px",gap:6,padding:"10px 8px",borderRadius:12,background:sel?.symbol===s.symbol?"#111120":"transparent",marginBottom:2,alignItems:"center",animation:`fadeUp .3s ease ${i*.02}s both`,cursor:"pointer"}}>
-            <div>
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
-                <button onClick={e=>toggleWatch(s.symbol,e)} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",padding:"0 1px",color:watchlist.has(s.symbol)?"#ffd93d":"#2a2a3e",lineHeight:1,flexShrink:0}}>{watchlist.has(s.symbol)?"⭐":"☆"}</button>
-                <span style={{color:"#fff",fontWeight:700,fontSize:14,fontFamily:"'IBM Plex Mono',monospace"}}>{s.symbol}</span>
-                <Badge sig={s.sig} sb={s.sb} sc={s.sc} sm/>
-              </div>
-              <div style={{color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'IBM Plex Mono',monospace"}}>${s.price}</div>
-            </div>
-            <div style={{textAlign:"center"}}>
-              <div style={{color:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.rsi}</div>
-            </div>
-            <div style={{textAlign:"right"}}>
-              <span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>
-            </div>
-            <div style={{display:"flex",justifyContent:"center",overflow:"hidden",borderRadius:6}}>
-              <iframe loading="lazy" src={`https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=${s.symbol}&theme=dark`} style={{width:"130px",height:"100px",border:"none",pointerEvents:"none"}}/>
-            </div>
-            <div style={{display:"flex",justifyContent:"center"}}><ScoreDot score={s.total}/></div>
-          </div>
-        ))}
-      </div>
-      {sel&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.95)",zIndex:200,display:"flex",flexDirection:"column",direction:"rtl",fontFamily:"'Heebo',sans-serif",animation:"slideIn .3s ease"}}>
-          <div style={{background:"#0a0a12",borderBottom:"1px solid #1a1a2e",padding:"14px 20px",display:"flex",alignItems:"center",gap:12}}>
-            <button className="btn" onClick={()=>setSel(null)} style={{background:"#1a1a2e",border:"none",color:"#888",width:34,height:34,borderRadius:"50%",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
-            <div style={{color:"#fff",fontSize:18,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>{sel.symbol}</div>
-            <Badge sig={sel.sig} sb={sel.sb} sc={sel.sc}/>
-          </div>
-          <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
-            <Section><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:"#fff",fontSize:32,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>${sel.price}</div><div style={{color:sel.change>=0?"#00ff87":"#ff6b6b",fontSize:16,fontWeight:600}}>{sel.change>=0?"+":""}{sel.change}%</div></div><Spark data={sel.spark} color={sel.change>=0?"#00ff87":"#ff6b6b"} w={100} h={44}/></div></Section>
-            {isBegin&&<BeginnerTip text={`RSI ${sel.rsi} — ${sel.rsi<30?"מכור יתר, נתונים חיוביים פוטנציאליים":sel.rsi>70?"קנוי יתר, זהירות":sel.rsi>50?"מגמה עולה, המתן לאישור":"מגמה יורדת, זהירות"}. יעד: $${sel.target} | סטופ: $${sel.stop}`}/>}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-              {[{l:"יעד",v:`$${sel.target}`,c:"#00ff87"},{l:"סטופ",v:`$${sel.stop}`,c:"#ff6b6b"},{l:"R:R",v:`${sel.rr}:1`,c:sel.rr>=2?"#00ff87":"#ffd93d"},{l:"RSI",v:sel.rsi,c:sel.rsi<30?"#00ff87":sel.rsi>70?"#ff6b6b":"#ffd93d"}].map(({l,v,c})=>(
-                <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}>
-                  <div style={{color:"#999",fontSize:13,marginBottom:4}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div>
-                  <div style={{color:c,fontSize:18,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div>
-                  {isBegin&&l==="R:R"&&<div style={{color:"#888",fontSize:13,marginTop:3}}>יחס תגמול/סיכון</div>}
+          <div key={s.symbol}>
+            <div className="row" onClick={()=>setSel(s===sel?null:s)} style={{display:"grid",gridTemplateColumns:"1fr 52px 58px 130px 52px",gap:6,padding:"10px 8px",borderRadius:12,background:sel?.symbol===s.symbol?"#111120":"transparent",marginBottom:2,alignItems:"center",animation:`fadeUp .3s ease ${i*.02}s both`,cursor:"pointer"}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                  <button onClick={e=>toggleWatch(s.symbol,e)} style={{background:"none",border:"none",fontSize:13,cursor:"pointer",padding:"0 1px",color:watchlist.has(s.symbol)?"#ffd93d":"#2a2a3e",lineHeight:1,flexShrink:0}}>{watchlist.has(s.symbol)?"⭐":"☆"}</button>
+                  <span style={{color:"#fff",fontWeight:700,fontSize:14,fontFamily:"'IBM Plex Mono',monospace"}}>{s.symbol}</span>
+                  <Badge sig={s.sig} sb={s.sb} sc={s.sc} sm/>
                 </div>
-              ))}
+                <div style={{color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'IBM Plex Mono',monospace"}}>${s.price}</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{color:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d",fontSize:12,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.rsi}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>
+              </div>
+              <div style={{overflow:"hidden",borderRadius:6,height:100}}>
+                <iframe loading="lazy" src={`https://s.tradingview.com/widgetembed/?symbol=${s.symbol}&interval=D&theme=dark&style=1&hide_top_toolbar=1&hide_side_toolbar=1&hide_legend=1&save_image=0`} style={{width:"130px",height:"100px",border:"none",display:"block",pointerEvents:"none"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"center"}}><ScoreDot score={s.total}/></div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-              {[{l:"טכני",v:sel.tech},{l:"פונדמנטלי",v:sel.fund},{l:"סנטימנט",v:sel.sent}].map(({l,v})=>{const c=v>=65?"#00ff87":v>=45?"#ffd93d":"#ff6b6b";return(<div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#999",fontSize:13,marginBottom:6}}>{l}{isBegin&&BEGINNER_TIPS[l]&&<span title={BEGINNER_TIPS[l]} style={{marginRight:4,cursor:"help",color:"#ffd93d33"}}>ℹ</span>}</div><div style={{color:c,fontSize:20,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",marginBottom:6}}>{v}</div><div style={{height:3,background:"#1a1a2e",borderRadius:2}}><div style={{width:`${v}%`,height:"100%",background:c,borderRadius:2}}/></div></div>);})}
-            </div>
-            {isPro&&(
-              <div style={{marginTop:10,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                {[{l:"MACD",v:sel.macd,c:sel.macd>=0?"#00ff87":"#ff6b6b"},{l:"EMA20",v:`$${sel.ema20}`,c:sel.price>sel.ema20?"#00ff87":"#ff6b6b"},{l:"EMA50",v:`$${sel.ema50}`,c:sel.price>sel.ema50?"#00ff87":"#ff6b6b"}].map(({l,v,c})=>(
-                  <div key={l} style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:12,padding:"12px"}}><div style={{color:"#999",fontSize:13,marginBottom:4}}>{l}</div><div style={{color:c,fontSize:14,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div></div>
-                ))}
+            {sel?.symbol===s.symbol&&(
+              <div style={{marginBottom:8,borderRadius:12,overflow:"hidden",border:"1px solid #1a1a2e",background:"#0a0a12",animation:"fadeUp .2s ease"}}>
+                <iframe src={`https://s.tradingview.com/widgetembed/?symbol=${s.symbol}&interval=D&timezone=Asia%2FJerusalem&theme=dark&style=1&locale=he_IL&hide_side_toolbar=0&save_image=0`} style={{width:"100%",height:"320px",border:"none",display:"block"}}/>
+                <div style={{padding:"10px 14px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,borderTop:"1px solid #1a1a2e"}}>
+                  {[{l:"מחיר",v:`$${s.price}`,c:"#fff"},{l:"RSI",v:s.rsi,c:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d"},{l:"יעד",v:`$${s.target}`,c:"#00ff87"},{l:"סטופ",v:`$${s.stop}`,c:"#ff6b6b"}].map(({l,v,c})=>(
+                    <div key={l} style={{textAlign:"center"}}>
+                      <div style={{color:"#555",fontSize:11,marginBottom:3,fontFamily:"'Heebo',sans-serif"}}>{l}</div>
+                      <div style={{color:c,fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                {onAnalyze&&(
+                  <div style={{padding:"0 14px 10px",display:"flex",justifyContent:"flex-end"}}>
+                    <button onClick={()=>onAnalyze(s.symbol)} style={{background:"#a78bfa20",border:"1px solid #a78bfa40",borderRadius:8,color:"#a78bfa",fontSize:13,padding:"6px 14px",cursor:"pointer",fontFamily:"'Heebo',sans-serif",fontWeight:700}}>ניתוח מלא 🔍</button>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
     </>
   );
 }
@@ -2112,7 +2100,6 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
   const [aiSummary,setAiSummary]=useState(null);
   const [aiLoading,setAiLoading]=useState(false);
   const [livePrice,setLivePrice]=useState(null);
-  const tvRef=useRef(null);
   const mono="'IBM Plex Mono',monospace";
   const heebo="'Heebo',sans-serif";
 
@@ -2122,23 +2109,6 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
       .then(r=>r.json())
       .then(d=>{const arr=Array.isArray(d?.results)?d.results:[];if(arr.length>0)setLivePrice(arr[arr.length-1].c);})
       .catch(()=>{});
-  },[sym]);
-
-  useEffect(()=>{
-    if(!tvRef.current)return;
-    const cid=`tv_${sym}`;
-    tvRef.current.innerHTML=`<div id="${cid}"></div>`;
-    const init=()=>{
-      if(!window.TradingView||!document.getElementById(cid))return;
-      new window.TradingView.widget({width:"100%",height:440,symbol:sym,interval:"D",timezone:"Asia/Jerusalem",theme:"dark",style:"1",locale:"he_IL",toolbar_bg:"#1a1a2e",enable_publishing:false,hide_top_toolbar:false,container_id:cid});
-    };
-    if(window.TradingView){init();}
-    else{
-      let s=document.querySelector('script[src*="tradingview.com/tv.js"]');
-      if(!s){s=document.createElement('script');s.src='https://s3.tradingview.com/tv.js';document.head.appendChild(s);}
-      s.addEventListener('load',init,{once:true});
-    }
-    return()=>{if(tvRef.current)tvRef.current.innerHTML='';};
   },[sym]);
 
   function buildFallback(){
