@@ -2,6 +2,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 import { useState, useEffect, useRef } from "react";
 import AlertsPanel from "./AlertsPanel";
 import CandlestickGuide from "./CandlestickGuide";
+import TVChart from "./TVChart";
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Heebo:wght@300;400;500;600;700&display=swap');`;
 const CSS = `
@@ -2089,32 +2090,6 @@ function CandleChart({bars}){
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// TRADINGVIEW CHART COMPONENT
-// ══════════════════════════════════════════════════════════════════════
-function TVChart({sym}){
-  useEffect(()=>{
-    const container=document.getElementById(`tradingview_${sym}`);
-    if(!container)return;
-    container.innerHTML='';
-    const script=document.createElement('script');
-    script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async=true;
-    script.innerHTML=JSON.stringify({
-      symbol:sym,interval:"D",width:"100%",height:400,
-      theme:"dark",style:"1",locale:"he_IL",
-      container_id:`tradingview_${sym}`
-    });
-    container.appendChild(script);
-    return()=>{if(container)container.innerHTML='';};
-  },[sym]);
-  return(
-    <div className="tradingview-widget-container" style={{height:"400px"}}>
-      <div id={`tradingview_${sym}`} style={{height:"400px"}}/>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════
 // STOCK ANALYSIS SCREEN
 // ══════════════════════════════════════════════════════════════════════
 function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
@@ -2193,7 +2168,7 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
 
         {/* Block 0: TradingView Chart */}
         <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,overflow:"hidden",marginBottom:12}}>
-          <TVChart sym={sym}/>
+          <TVChart symbol={sym}/>
         </div>
 
         {/* Block 1: Technical */}
