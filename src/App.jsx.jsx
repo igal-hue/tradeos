@@ -2129,9 +2129,9 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
         :`מניה: ${sym}. אין נתונים מקומיים.`;
       if(earningDays!==null&&earningDays>=0&&earningDays<=7)ctx+=` דיווח רבעוני בעוד ${earningDays} ימים.`;
       if(news.length>0)ctx+=` חדשות: ${news.slice(0,2).map(n=>n.headline).join('. ')}.`;
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,system:"אתה מנתח נתוני מסחר. סכם בעברית קצרה את הנתונים הטכניים הבאים בלי להמליץ קנה/מכור. הצג רק עובדות ומה הנתונים מראים. 3 משפטים קצרים.",messages:[{role:"user",content:ctx}]})});
+      const res=await apiCall('/api/ai/analyze',{method:'POST',body:JSON.stringify({symbol:sym,context:ctx})});
       const d=await res.json();
-      const txt=d.content?.[0]?.text;
+      const txt=d.summary||d.text||d.content?.[0]?.text;
       setAiSummary(txt||buildFallback());
     }catch{setAiSummary(buildFallback());}
     setAiLoading(false);
