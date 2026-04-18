@@ -939,13 +939,13 @@ function Scanner({experience="intermediate",searchQuery="",onAnalyze}){
                 <span style={{color:s.change>=0?"#00ff87":"#ff6b6b",fontSize:13,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace"}}>{s.change>=0?"+":""}{s.change}%</span>
               </div>
               <div style={{overflow:"hidden",borderRadius:6,height:100}}>
-                <iframe loading="lazy" src={`https://s.tradingview.com/widgetembed/?symbol=${s.symbol}&interval=D&theme=dark&style=1&hide_top_toolbar=1&hide_side_toolbar=1&hide_legend=1&save_image=0`} style={{width:"130px",height:"100px",border:"none",display:"block",pointerEvents:"none"}}/>
+                <iframe key={s.symbol} src={`https://s.tradingview.com/widgetembed/?frameElementId=tv_mini_${s.symbol}&symbol=${s.symbol}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&theme=dark&style=1&timezone=Asia%2FJerusalem&studies=[]&locale=he_IL`} style={{width:"130px",height:"100px",border:"none",display:"block",pointerEvents:"none"}} allowTransparency={true} scrolling="no"/>
               </div>
               <div style={{display:"flex",justifyContent:"center"}}><ScoreDot score={s.total}/></div>
             </div>
             {sel?.symbol===s.symbol&&(
               <div style={{marginBottom:8,borderRadius:12,overflow:"hidden",border:"1px solid #1a1a2e",background:"#0a0a12",animation:"fadeUp .2s ease"}}>
-                <iframe src={`https://s.tradingview.com/widgetembed/?symbol=${s.symbol}&interval=D&timezone=Asia%2FJerusalem&theme=dark&style=1&locale=he_IL&hide_side_toolbar=0&save_image=0`} style={{width:"100%",height:"320px",border:"none",display:"block"}}/>
+                <iframe key={s.symbol} src={`https://s.tradingview.com/widgetembed/?frameElementId=tv_${s.symbol}&symbol=${s.symbol}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&theme=dark&style=1&timezone=Asia%2FJerusalem&studies=[]&locale=he_IL`} style={{width:"100%",height:"400px",border:"none"}} allowTransparency={true} scrolling="no" allowFullScreen={true}/>
                 <div style={{padding:"10px 14px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,borderTop:"1px solid #1a1a2e"}}>
                   {[{l:"מחיר",v:`$${s.price}`,c:"#fff"},{l:"RSI",v:s.rsi,c:s.rsi<30?"#00ff87":s.rsi>70?"#ff6b6b":"#ffd93d"},{l:"יעד",v:`$${s.target}`,c:"#00ff87"},{l:"סטופ",v:`$${s.stop}`,c:"#ff6b6b"}].map(({l,v,c})=>(
                     <div key={l} style={{textAlign:"center"}}>
@@ -2167,7 +2167,7 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
 
         {/* Block 0: TradingView Chart */}
         <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,overflow:"hidden",marginBottom:12}}>
-          <iframe src={`https://s.tradingview.com/widgetembed/?symbol=${sym}&interval=D&timezone=Asia%2FJerusalem&theme=dark&style=1&locale=he_IL&hide_top_toolbar=0&save_image=0`} style={{width:"100%",height:"440px",border:"none",display:"block"}} allowFullScreen/>
+          <iframe key={sym} src={`https://s.tradingview.com/widgetembed/?frameElementId=tv_${sym}&symbol=${sym}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&theme=dark&style=1&timezone=Asia%2FJerusalem&studies=[]&locale=he_IL`} style={{width:"100%",height:"400px",border:"none"}} allowTransparency={true} scrolling="no" allowFullScreen={true}/>
         </div>
 
         {/* Block 1: Technical */}
