@@ -2089,6 +2089,48 @@ function CandleChart({bars}){
 }
 
 // ══════════════════════════════════════════════════════════════════════
+// TRADINGVIEW CHART COMPONENT
+// ══════════════════════════════════════════════════════════════════════
+function TVChart({sym}){
+  const containerId=`tv_chart_${sym}`;
+  useEffect(()=>{
+    const init=()=>{
+      if(!window.TradingView)return;
+      const el=document.getElementById(containerId);
+      if(!el)return;
+      el.innerHTML='';
+      new window.TradingView.widget({
+        container_id:containerId,symbol:sym,interval:"D",theme:"dark",
+        style:"1",locale:"he_IL",toolbar_bg:"#131722",
+        width:"100%",height:400,hide_top_toolbar:false,
+        studies:["RSI@tv-basicstudies"]
+      });
+    };
+    if(window.TradingView){init();}
+    else{
+      const s=document.querySelector('script[src*="tradingview.com/tv.js"]');
+      if(s)s.addEventListener('load',init,{once:true});
+    }
+    return()=>{const el=document.getElementById(containerId);if(el)el.innerHTML='';};
+  },[sym]);
+  return(
+    <>
+      <div id={containerId} style={{width:"100%",height:"400px"}}/>
+      <script dangerouslySetInnerHTML={{__html:`
+        (function(){
+          new TradingView.widget({
+            container_id:"${containerId}",symbol:"${sym}",interval:"D",
+            theme:"dark",style:"1",locale:"he_IL",toolbar_bg:"#131722",
+            width:"100%",height:400,hide_top_toolbar:false,
+            studies:["RSI@tv-basicstudies"]
+          });
+        })();
+      `}}/>
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // STOCK ANALYSIS SCREEN
 // ══════════════════════════════════════════════════════════════════════
 function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
@@ -2167,7 +2209,7 @@ function StockAnalysisScreen({symbol,onClose,onOpenSizer,onOpenJournal}){
 
         {/* Block 0: TradingView Chart */}
         <div style={{background:"#0d0d18",border:"1px solid #1a1a2e",borderRadius:14,overflow:"hidden",marginBottom:12}}>
-          <iframe key={sym} src={`https://www.tradingview.com/chart/?symbol=NASDAQ:${sym}&theme=dark`} style={{width:"100%",height:"400px",border:"none"}} allowFullScreen/>
+          <TVChart sym={sym}/>
         </div>
 
         {/* Block 1: Technical */}
