@@ -1,3 +1,4 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 import { useState, useEffect, useRef } from "react";
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Heebo:wght@300;400;500;600;700&display=swap');`;
